@@ -1,0 +1,28 @@
+diff --git a/boring-sys/build/main.rs b/boring-sys/build/main.rs
+index ae6df99..015b656 100644
+--- a/boring-sys/build/main.rs
++++ b/boring-sys/build/main.rs
+@@ -69,6 +69,23 @@ const CMAKE_PARAMS_APPLE: &[(&str, &[(&str, &str)])] = &[
+             ("CMAKE_MACOSX_BUNDLE", "OFF"),
+         ],
+     ),
++    // Mac Catalyst
++    (
++        "aarch64-apple-ios-macabi",
++        &[
++            ("CMAKE_OSX_ARCHITECTURES", "arm64"),
++            ("CMAKE_OSX_SYSROOT", "macosx"),
++            ("CMAKE_MACOSX_BUNDLE", "OFF"),
++        ],
++    ),
++    (
++        "x86_64-apple-ios-macabi",
++        &[
++            ("CMAKE_OSX_ARCHITECTURES", "x86_64"),
++            ("CMAKE_OSX_SYSROOT", "macosx"),
++            ("CMAKE_MACOSX_BUNDLE", "OFF"),
++        ],
++    ),
+     // tvOS
+     (
+         "aarch64-apple-tvos",

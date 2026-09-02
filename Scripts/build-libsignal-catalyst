@@ -1,0 +1,160 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: AGPL-3.0-only
+
+set -euo pipefail
+
+readonly SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+readonly REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+readonly CHECKOUT_ROOT="$(cd "${REPO_ROOT}/.." && pwd)"
+
+readonly LIBSIGNAL_TAG="v0.101.0"
+readonly LIBSIGNAL_COMMIT="b056faa6dd02961cff24064c54c089c52e1a0753"
+readonly BORING_TAG="signal-v5.2.0"
+readonly BORING_COMMIT="1405df0a23a0335618f88ed328c76f67646b088f"
+
+readonly LIBSIGNAL_DIR="${LIBSIGNAL_DIR:-${CHECKOUT_ROOT}/libsignal}"
+readonly BORING_DIR="${BORING_DIR:-${CHECKOUT_ROOT}/boring-catalyst}"
+readonly BORING_PATCH="${SCRIPT_DIR}/patches/boring-catalyst.patch"
+
+require_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "error: missing required command: $1" >&2
+    exit 1
+  fi
+}
+
+clone_if_missing() {
+  local url="$1"
+  local tag="$2"
+  local directory="$3"
+
+  if [[ ! -d "${directory}/.git" ]]; then
+    git clone --branch "${tag}" --depth 1 "${url}" "${directory}"
+  fi
+}
+
+verify_commit() {
+  local directory="$1"
+  local expected_commit="$2"
+  local actual_commit
+  actual_commit="$(git -C "${directory}" rev-parse HEAD)"
+
+  if [[ "${actual_commit}" != "${expected_commit}" ]]; then
+    echo "error: ${directory} is at ${actual_commit}; expected ${expected_commit}" >&2
+    exit 1
+  fi
+}
+
+validate_archive() {
+  local archive="$1"
+  local target="$2"
+  local object_name
+  local validation_dir
+  local build_info
+
+  object_name="$(ar -t "${archive}" | awk '/\.o$/ && object_name == "" { object_name = $0 } END { print object_name }')"
+  if [[ -z "${object_name}" ]]; then
+    echo "error: ${archive} does not contain an object file" >&2
+    exit 1
+  fi
+
+  validation_dir="${TEMP_DIR}/validation-${target}"
+  mkdir -p "${validation_dir}"
+  build_info="$({
+    cd "${validation_dir}"
+    ar -x "${archive}" "${object_name}"
+    xcrun vtool -show-build "${object_name}"
+  })"
+
+  if ! grep -q 'platform MACCATALYST' <<< "${build_info}"; then
+    echo "error: ${archive} is not marked for Mac Catalyst" >&2
+    exit 1
+  fi
+
+  echo "Validated ${target}: MACCATALYST"
+}
+
+require_command ar
+require_command awk
+require_command cargo
+require_command cmake
+require_command grep
+require_command git
+require_command lipo
+require_command protoc
+require_command rustup
+require_command xcrun
+
+clone_if_missing https://github.com/signalapp/libsignal.git "${LIBSIGNAL_TAG}" "${LIBSIGNAL_DIR}"
+clone_if_missing https://github.com/signalapp/boring.git "${BORING_TAG}" "${BORING_DIR}"
+verify_commit "${LIBSIGNAL_DIR}" "${LIBSIGNAL_COMMIT}"
+verify_commit "${BORING_DIR}" "${BORING_COMMIT}"
+
+if git -C "${BORING_DIR}" apply --check "${BORING_PATCH}"; then
+  git -C "${BORING_DIR}" apply "${BORING_PATCH}"
+elif ! git -C "${BORING_DIR}" apply --reverse --check "${BORING_PATCH}"; then
+  echo "error: the Catalyst patch does not apply cleanly to ${BORING_DIR}" >&2
+  exit 1
+fi
+
+git -C "${BORING_DIR}" submodule update --init --recursive
+
+readonly RUST_TOOLCHAIN="$(tr -d '[:space:]' < "${LIBSIGNAL_DIR}/rust-toolchain")"
+rustup toolchain install "${RUST_TOOLCHAIN}" --profile minimal
+rustup target add --toolchain "${RUST_TOOLCHAIN}" \
+  aarch64-apple-ios-macabi \
+  x86_64-apple-ios-macabi
+
+readonly TEMP_DIR="$(mktemp -d)"
+readonly CARGO_CONFIG="${TEMP_DIR}/cargo-config.toml"
+readonly CARGO_WRAPPER_DIR="${TEMP_DIR}/bin"
+readonly LOCKFILE_BACKUP="${TEMP_DIR}/Cargo.lock"
+mkdir -p "${CARGO_WRAPPER_DIR}"
+cp "${LIBSIGNAL_DIR}/Cargo.lock" "${LOCKFILE_BACKUP}"
+
+restore_lockfile() {
+  cp "${LOCKFILE_BACKUP}" "${LIBSIGNAL_DIR}/Cargo.lock"
+  rm -rf "${TEMP_DIR}"
+}
+trap restore_lockfile EXIT
+
+printf '%s\n' \
+  '[patch.crates-io]' \
+  "boring = { path = \"${BORING_DIR}/boring\" }" \
+  "boring-sys = { path = \"${BORING_DIR}/boring-sys\" }" \
+  '' \
+  '[patch."https://github.com/signalapp/boring"]' \
+  "boring = { path = \"${BORING_DIR}/boring\" }" \
+  "boring-sys = { path = \"${BORING_DIR}/boring-sys\" }" \
+  "tokio-boring = { path = \"${BORING_DIR}/tokio-boring\" }" \
+  > "${CARGO_CONFIG}"
+
+printf '%s\n' \
+  '#!/bin/bash' \
+  'exec "${LIBSIGNAL_REAL_CARGO}" --config "${LIBSIGNAL_CARGO_CONFIG}" "$@"' \
+  > "${CARGO_WRAPPER_DIR}/cargo"
+chmod +x "${CARGO_WRAPPER_DIR}/cargo"
+
+readonly REAL_CARGO="$(rustup which --toolchain "${RUST_TOOLCHAIN}" cargo)"
+readonly REAL_RUSTC="$(rustup which --toolchain "${RUST_TOOLCHAIN}" rustc)"
+for target in aarch64-apple-ios-macabi x86_64-apple-ios-macabi; do
+  echo "Building libsignal for ${target}"
+  env \
+    PATH="${CARGO_WRAPPER_DIR}:${PATH}" \
+    LIBSIGNAL_REAL_CARGO="${REAL_CARGO}" \
+    LIBSIGNAL_CARGO_CONFIG="${CARGO_CONFIG}" \
+    RUSTC="${REAL_RUSTC}" \
+    RUSTUP_TOOLCHAIN="${RUST_TOOLCHAIN}" \
+    CARGO_BUILD_TARGET="${target}" \
+    "${LIBSIGNAL_DIR}/swift/build_ffi.sh" --release
+
+  archive="${LIBSIGNAL_DIR}/target/${target}/release/libsignal_ffi.a"
+  lipo -info "${archive}"
+  validate_archive "${archive}" "${target}"
+done
+
+echo
+echo "Catalyst libsignal archives are ready in ${LIBSIGNAL_DIR}/target."
+echo "Run the following from ${REPO_ROOT}:"
+echo "  LIBSIGNAL_LOCAL_PATH=${LIBSIGNAL_DIR} bundle exec pod install"

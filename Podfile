@@ -12,8 +12,11 @@ pod 'blurhash', podspec: './ThirdParty/blurhash.podspec'
 pod 'SwiftProtobuf', "1.36.1"
 
 ENV['LIBSIGNAL_FFI_PREBUILD_CHECKSUM'] = '76fc4f7bc4d9fe6c049814c9f3a423dcc71b2f9cb8d703174bc0cf6f9e8f095a'
-pod 'LibSignalClient', git: 'https://github.com/signalapp/libsignal.git', tag: 'v0.101.0', testspecs: ["Tests"]
-# pod 'LibSignalClient', path: '../libsignal', testspecs: ["Tests"]
+if ENV['LIBSIGNAL_LOCAL_PATH']
+  pod 'LibSignalClient', path: File.expand_path(ENV['LIBSIGNAL_LOCAL_PATH'], __dir__), testspecs: ["Tests"]
+else
+  pod 'LibSignalClient', git: 'https://github.com/signalapp/libsignal.git', tag: 'v0.101.0', testspecs: ["Tests"]
+end
 
 ENV['RINGRTC_PREBUILD_CHECKSUM'] = 'd3e2013ca3e4a490c7c6dbd840a90caa5ff6b2bc8b635d120b1d732ae2f77a84'
 # ENV['RINGRTC_USE_FILE_BASED_CAMERA'] = '1'

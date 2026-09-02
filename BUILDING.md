@@ -79,12 +79,24 @@ excluded from the Catalyst dependency graph. The Mac variant uses the distinct
 bundle identifier `$(SIGNAL_BUNDLEID_PREFIX).signal.catalyst` and does not load
 the iOS app's entitlement file.
 
-The full app does not yet link as a Catalyst application because the pinned
-RingRTC/WebRTC and MobileCoin binary artifacts only contain iOS device and
-simulator slices, while the pinned libsignal archive is missing the Catalyst
-library expected by its build settings. Those dependencies must publish
-`maccatalyst` artifacts (or the affected features must be conditionally
-replaced) before the Catalyst scheme can produce a runnable Signal app.
+The published libsignal archive does not include Catalyst libraries. Build the
+pinned source locally and tell CocoaPods to use that checkout instead:
+
+```
+brew install protobuf
+Scripts/build-libsignal-catalyst
+LIBSIGNAL_LOCAL_PATH=../libsignal bundle exec pod install
+```
+
+The build script creates sibling `libsignal` and `boring-catalyst` checkouts as
+needed, verifies their pinned commits, and builds arm64 and x86_64 Catalyst
+archives. Its small BoringSSL build-system patch enables the existing Catalyst
+targets without changing cryptographic code.
+
+The full app still does not link as a Catalyst application because the pinned
+RingRTC/WebRTC and MobileCoin artifacts only contain iOS device and simulator
+slices. Those dependencies must publish `maccatalyst` artifacts or be
+conditionally excluded before the Catalyst scheme can produce a runnable app.
 
 ## Known issues
 
