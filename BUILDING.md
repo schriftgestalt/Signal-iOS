@@ -57,6 +57,35 @@ be on with the iCloud Documents option selected.
 
 Build and Run and you are ready to go!
 
+## Mac Catalyst (experimental)
+
+The `Signal-Catalyst` scheme builds the existing Signal app target for the
+Mac Catalyst destination, so the iOS and Mac variants continue to share their
+source and resource membership. In Xcode, select `Signal-Catalyst` and a
+`My Mac (Mac Catalyst)` destination. The equivalent command-line build is:
+
+```
+xcodebuild \
+    -workspace Signal.xcworkspace \
+    -scheme Signal-Catalyst \
+    -configuration Debug \
+    -destination 'platform=macOS,variant=Mac Catalyst' \
+    build
+```
+
+The application, `SignalUI`, and `SignalServiceKit` targets advertise Catalyst
+support. The notification service and share extensions remain iOS-only and are
+excluded from the Catalyst dependency graph. The Mac variant uses the distinct
+bundle identifier `$(SIGNAL_BUNDLEID_PREFIX).signal.catalyst` and does not load
+the iOS app's entitlement file.
+
+The full app does not yet link as a Catalyst application because the pinned
+RingRTC/WebRTC and MobileCoin binary artifacts only contain iOS device and
+simulator slices, while the pinned libsignal archive is missing the Catalyst
+library expected by its build settings. Those dependencies must publish
+`maccatalyst` artifacts (or the affected features must be conditionally
+replaced) before the Catalyst scheme can produce a runnable Signal app.
+
 ## Known issues
 
 Features related to push notifications are known to be not working for
