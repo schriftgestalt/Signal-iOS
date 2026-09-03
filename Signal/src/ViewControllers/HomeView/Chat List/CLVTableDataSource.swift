@@ -749,6 +749,12 @@ class CLVTableDataSource: NSObject, UITableViewDataSource, UITableViewDelegate {
 
     func calcRefreshTimer() {
         nextUpdateAt = nil
+
+        // The initial reload can complete during viewWillAppear, before the
+        // table has joined a window. Asking for visibleCells at that point
+        // forces UIKit to lay out a zero-sized, off-window table.
+        guard tableView.window != nil else { return }
+
         for cell in tableView.visibleCells {
             updateAndSetRefreshTimer(for: cell as? ChatListCell)
         }
