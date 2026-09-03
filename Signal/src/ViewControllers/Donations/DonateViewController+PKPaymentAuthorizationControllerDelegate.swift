@@ -7,6 +7,12 @@ import Foundation
 import PassKit
 
 extension DonateViewController: PKPaymentAuthorizationControllerDelegate {
+#if targetEnvironment(macCatalyst)
+    func presentationWindow(for controller: PKPaymentAuthorizationController) -> UIWindow? {
+        view.window
+    }
+#endif
+
     func paymentAuthorizationControllerDidFinish(_ controller: PKPaymentAuthorizationController) {
         controller.dismiss()
     }

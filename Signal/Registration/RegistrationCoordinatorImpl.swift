@@ -614,9 +614,18 @@ public class RegistrationCoordinatorImpl: RegistrationCoordinator {
                         localFileBackupBookmarkData,
                         isStale: &isStale,
                     )
-                } catch NSFileProviderError.noSuchItem {
-                    throw LocalFileBackupError.unableToAccessLocalFile(.missing)
                 } catch {
+                    let nsError = error as NSError
+#if targetEnvironment(macCatalyst)
+                    let isMissingFile = nsError.domain == NSCocoaErrorDomain
+                        && [CocoaError.Code.fileNoSuchFile.rawValue, CocoaError.Code.fileReadNoSuchFile.rawValue].contains(nsError.code)
+#else
+                    let isMissingFile = nsError.domain == NSFileProviderErrorDomain
+                        && nsError.code == NSFileProviderError.noSuchItem.rawValue
+#endif
+                    if isMissingFile {
+                        throw LocalFileBackupError.unableToAccessLocalFile(.missing)
+                    }
                     throw OWSAssertionError("Unable to resolve bookmark data: \(error)")
                 }
 

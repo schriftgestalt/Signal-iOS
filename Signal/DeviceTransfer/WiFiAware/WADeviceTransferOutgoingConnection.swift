@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+#if canImport(WiFiAware)
 import Foundation
 import Network
 import SignalServiceKit
@@ -78,3 +79,4 @@ class WADeviceTransferOutgoingConnection: DeviceTransfer.OutgoingConnection {
     func stop(error: Error?) {
     }
 }
+#endif

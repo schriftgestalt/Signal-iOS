@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+#if canImport(WiFiAware)
 import Foundation
 import Network
 public import WiFiAware
@@ -62,3 +63,4 @@ extension WAPairedDevice {
         return "\(displayName) (\(self.pairingInfo?.vendorName ?? ""))"
     }
 }
+#endif

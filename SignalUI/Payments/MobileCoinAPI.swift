@@ -6,8 +6,8 @@
 import Foundation
 #if canImport(MobileCoin)
 import MobileCoin
-public import SignalServiceKit
 #endif
+public import SignalServiceKit
 
 #if canImport(MobileCoin)
 public class MobileCoinAPI {
@@ -810,5 +810,15 @@ extension MobileCoinAPI {
             return nil
         }
     }
+}
+#else
+@inlinable
+public func owsFailDebugUnlessMCNetworkFailure(
+    _ error: Error,
+    file: String = #file,
+    function: String = #function,
+    line: Int = #line,
+) {
+    owsFailDebugUnlessNetworkFailure(error, file: file, function: function, line: line)
 }
 #endif

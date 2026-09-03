@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+#if canImport(WiFiAware)
 import Foundation
 import Network
 import SignalServiceKit
@@ -162,3 +163,4 @@ class WADeviceTransferSession: DeviceTransfer.Session {
         return info.fileUrl
     }
 }
+#endif

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+#if canImport(WiFiAware)
 import Foundation
 import Network
 import SignalServiceKit
@@ -95,3 +96,4 @@ class WADeviceTransferIncomingConnection: DeviceTransfer.IncomingConnection {
         connectionContinuation.take()?.resume(throwing: error ?? CancellationError())
     }
 }
+#endif

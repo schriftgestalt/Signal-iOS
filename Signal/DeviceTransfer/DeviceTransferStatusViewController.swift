@@ -3,12 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import DeviceDiscoveryUI
 import Lottie
 import SignalServiceKit
 import SignalUI
 import SwiftUI
+#if canImport(DeviceDiscoveryUI) && canImport(WiFiAware)
+import DeviceDiscoveryUI
 import WiFiAware
+#endif
 
 // MARK: - DeviceTransferStatusViewController
 
@@ -125,11 +127,15 @@ struct TransferStatusView: View {
                     .playing(loopMode: .loop)
                     .padding(.bottom, 14)
 
+#if canImport(DeviceDiscoveryUI) && canImport(WiFiAware)
                 let useWiFiAware = if #available(iOS 26.0, *), viewModel.supportsWifiAware {
                     true
                 } else {
                     false
                 }
+#else
+                let useWiFiAware = false
+#endif
                 Text(indefinite.title(isNewDevice: isNewDevice, supportsWifiAware: useWiFiAware))
                     .font(.body.bold())
                     .foregroundStyle(Color.Signal.label)
@@ -137,6 +143,7 @@ struct TransferStatusView: View {
                     .font(.body)
                     .foregroundStyle(Color.Signal.secondaryLabel)
 
+#if canImport(DeviceDiscoveryUI) && canImport(WiFiAware)
                 if
                     #available(iOS 26.0, *),
                     viewModel.supportsWifiAware,
@@ -207,6 +214,7 @@ struct TransferStatusView: View {
                         }
                     }
                 }
+#endif
                 Spacer()
                 Button(CommonStrings.cancelButton) {
                     Task {

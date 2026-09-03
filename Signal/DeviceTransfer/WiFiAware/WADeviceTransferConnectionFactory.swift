@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+#if canImport(WiFiAware)
 import Foundation
 import SignalServiceKit
 
@@ -16,3 +17,4 @@ struct WADeviceTransferConnectionFactory: DeviceTransfer.ConnectionFactory {
         return WADeviceTransferIncomingConnection()
     }
 }
+#endif

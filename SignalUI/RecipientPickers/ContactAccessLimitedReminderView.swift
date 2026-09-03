@@ -14,7 +14,19 @@ struct ContactAccessLimitedReminderView: View {
     }
 
     @State private var displayPicker = false
+
     var body: some View {
+#if targetEnvironment(macCatalyst)
+        contents
+#else
+        contents
+            .contactAccessPicker(isPresented: $displayPicker) { _ in
+                completion()
+            }
+#endif
+    }
+
+    private var contents: some View {
         HStack {
             Text(
                 OWSLocalizedString(
@@ -27,7 +39,11 @@ struct ContactAccessLimitedReminderView: View {
             VStack {
                 Menu {
                     Button {
+#if targetEnvironment(macCatalyst)
+                        CurrentAppContext().openSystemSettings()
+#else
                         displayPicker.toggle()
+#endif
                     } label: {
                         Label {
                             Text(
@@ -64,9 +80,6 @@ struct ContactAccessLimitedReminderView: View {
                     .font(.system(.subheadline).weight(.bold))
                 }
             }
-        }
-        .contactAccessPicker(isPresented: $displayPicker) { _ in
-            completion()
         }
     }
 }

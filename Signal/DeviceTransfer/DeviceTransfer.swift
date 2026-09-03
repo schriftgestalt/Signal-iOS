@@ -6,7 +6,9 @@
 import CryptoKit
 import Foundation
 import SignalServiceKit
+#if canImport(WiFiAware)
 import WiFiAware
+#endif
 
 ///
 /// The following service is used to facilitate users in transferring their account from
@@ -60,9 +62,11 @@ import WiFiAware
 enum DeviceTransfer {
 
     static func platformSupportsWifiAware() -> Bool {
+#if canImport(WiFiAware)
         if #available(iOS 26.0, *) {
             return WACapabilities.supportedFeatures.contains(.wifiAware)
         }
+#endif
         return false
     }
 

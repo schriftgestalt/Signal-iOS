@@ -70,6 +70,7 @@ class OutgoingDeviceRestoreViewModel: ObservableObject {
             break
         case .deviceTransfer(let transferUrl):
             let factory: DeviceTransfer.ConnectionFactory
+#if canImport(WiFiAware)
             if
                 #available(iOS 26.0, *),
                 provisioningURL.capabilities.contains(.wifiaware),
@@ -82,6 +83,9 @@ class OutgoingDeviceRestoreViewModel: ObservableObject {
             } else {
                 factory = MPCDeviceTransferConnectionFactory()
             }
+#else
+            factory = MPCDeviceTransferConnectionFactory()
+#endif
 
             let outgoingDeviceTransferTask = try OutgoingDeviceTransferTask(
                 deviceTransferURL: transferUrl,

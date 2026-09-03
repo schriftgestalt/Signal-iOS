@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+#if canImport(WiFiAware)
 import Foundation
 import WiFiAware
 
@@ -11,3 +12,4 @@ struct WADeviceTransferPeerId: DeviceTransfer.PeerID {
     var peerID: String { pairedDevice.displayName }
     let pairedDevice: WAPairedDevice
 }
+#endif
