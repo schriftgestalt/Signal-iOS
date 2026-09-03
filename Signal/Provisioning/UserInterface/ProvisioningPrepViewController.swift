@@ -27,7 +27,13 @@ class ProvisioningPrepViewController: ProvisioningBaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+#if targetEnvironment(macCatalyst)
+        // Catalyst doesn't provide the iOS edge-swipe gesture as a discoverable
+        // way to leave this screen, so retain the navigation controller's Back item.
+        navigationItem.hidesBackButton = false
+#else
         navigationItem.hidesBackButton = true
+#endif
 
         let titleText: String
         if isTransferring {
