@@ -12,11 +12,36 @@ class AppSettingsViewController: OWSTableViewController2 {
         OWSNavigationController(rootViewController: AppSettingsViewController())
     }
 
+    class func inModalViewController() -> UIViewController {
+#if targetEnvironment(macCatalyst)
+        AppSettingsSplitViewController(appSettingsViewController: AppSettingsViewController())
+#else
+        inModalNavigationController()
+#endif
+    }
+
     private var localUsernameState: Usernames.LocalUsernameState!
     private var localUserProfile: OWSUserProfile?
+    private weak var detailNavigationController: OWSNavigationController?
+    private var selectsProfileInitially = false
 
     override func viewDidLoad() {
+#if targetEnvironment(macCatalyst)
+        if detailNavigationController != nil {
+            backgroundStyle = .clear
+            tableViewStyle = .plain
+            selectionBehavior = .actionWithoutAutoDeselect
+            defaultSpacingBetweenSections = 8
+        }
+#endif
+
         super.viewDidLoad()
+
+#if targetEnvironment(macCatalyst)
+        if detailNavigationController != nil {
+            tableView.insetsContentViewsToSafeArea = false
+        }
+#endif
 
         SSKEnvironment.shared.databaseStorageRef.read { tx in
             updateLocalUserProfile(tx: tx)
@@ -25,7 +50,13 @@ class AppSettingsViewController: OWSTableViewController2 {
         }
 
         title = OWSLocalizedString("SETTINGS_NAV_BAR_TITLE", comment: "Title for settings activity")
+#if targetEnvironment(macCatalyst)
+        navigationItem.leftBarButtonItem = .closeButton { [weak self] in
+            self?.dismiss(animated: true)
+        }
+#else
         navigationItem.rightBarButtonItem = .doneButton(dismissingFrom: self)
+#endif
 
         defaultSeparatorInsetLeading = Self.cellHInnerMargin + 24 + OWSTableItem.iconSpacing
 
@@ -67,6 +98,44 @@ class AppSettingsViewController: OWSTableViewController2 {
             name: .hasExpiredGiftBadgeDidChangeNotification,
             object: nil,
         )
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+#if targetEnvironment(macCatalyst)
+        if selectsProfileInitially, tableView.indexPathForSelectedRow == nil {
+            tableView.selectRow(at: IndexPath(row: 0, section: 0), animated: false, scrollPosition: .none)
+        }
+#endif
+    }
+
+    fileprivate func configureForSplitView(
+        detailNavigationController: OWSNavigationController,
+        selectsProfileInitially: Bool,
+    ) {
+        self.detailNavigationController = detailNavigationController
+        self.selectsProfileInitially = selectsProfileInitially
+    }
+
+    fileprivate func makeProfileSettingsViewController() -> ProfileSettingsViewController {
+        ProfileSettingsViewController(
+            usernameChangeDelegate: self,
+            usernameLinkScanDelegate: self,
+        )
+    }
+
+    private var settingsNavigationController: OWSNavigationController? {
+        detailNavigationController ?? owsNavigationController
+    }
+
+    private func showSettingsViewController(_ viewController: UIViewController) {
+        if let detailNavigationController {
+            detailNavigationController.setViewControllers([viewController], animated: false)
+            splitViewController?.show(.secondary)
+        } else {
+            navigationController?.pushViewController(viewController, animated: true)
+        }
     }
 
     private func updateLocalUserProfile(tx: DBReadTransaction) {
@@ -136,11 +205,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 },
                 actionBlock: { [weak self] in
                     guard let self else { return }
-                    let vc = ProfileSettingsViewController(
-                        usernameChangeDelegate: self,
-                        usernameLinkScanDelegate: self,
-                    )
-                    self.navigationController?.pushViewController(vc, animated: true)
+                    self.showSettingsViewController(self.makeProfileSettingsViewController())
                 },
             ),
         ])
@@ -152,7 +217,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             withText: OWSLocalizedString("SETTINGS_ACCOUNT", comment: "Title for the 'account' link in settings."),
             actionBlock: { [weak self] in
                 let vc = AccountSettingsViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.showSettingsViewController(vc)
             },
         ))
         if isPrimaryDevice {
@@ -160,10 +225,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 icon: .settingsLinkedDevices,
                 withText: OWSLocalizedString("LINKED_DEVICES_TITLE", comment: "Menu item and navbar title for the device manager"),
                 actionBlock: { [weak self] in
-                    self?.navigationController?.pushViewController(
-                        LinkedDevicesHostingController(),
-                        animated: true,
-                    )
+                    self?.showSettingsViewController(LinkedDevicesHostingController())
                 },
             ))
         }
@@ -196,7 +258,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             withText: OWSLocalizedString("SETTINGS_APPEARANCE_TITLE", comment: "The title for the appearance settings."),
             actionBlock: { [weak self] in
                 let vc = AppearanceSettingsTableViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.showSettingsViewController(vc)
             },
         ))
         section2.add(.disclosureItem(
@@ -204,7 +266,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             withText: OWSLocalizedString("SETTINGS_CHATS", comment: "Title for the 'chats' link in settings."),
             actionBlock: { [weak self] in
                 let vc = ChatsSettingsViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.showSettingsViewController(vc)
             },
         ))
         section2.add(.disclosureItem(
@@ -215,7 +277,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             ),
             actionBlock: { [weak self] in
                 let vc = StoryPrivacySettingsViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.showSettingsViewController(vc)
             },
         ))
         section2.add(.disclosureItem(
@@ -223,7 +285,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             withText: OWSLocalizedString("SETTINGS_NOTIFICATIONS", comment: "The title for the notification settings."),
             actionBlock: { [weak self] in
                 let vc = NotificationSettingsViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.showSettingsViewController(vc)
             },
         ))
         section2.add(.disclosureItem(
@@ -231,7 +293,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             withText: OWSLocalizedString("SETTINGS_PRIVACY_TITLE", comment: "The title for the privacy settings."),
             actionBlock: { [weak self] in
                 let vc = PrivacySettingsViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.showSettingsViewController(vc)
             },
         ))
 
@@ -246,7 +308,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 actionBlock: { [weak self] in
                     guard
                         let self,
-                        let navigationController
+                        let settingsNavigationController
                     else { return }
 
                     let backupsViewController: UIViewController
@@ -263,15 +325,12 @@ class AppSettingsViewController: OWSTableViewController2 {
                         backupsViewController = BackupOnboardingCoordinator(
                             backupType: .remote,
                         ).prepareForPresentation(
-                            inNavController: navigationController,
+                            inNavController: settingsNavigationController,
                             shouldSkipOnboarding: shouldSkipOnboarding,
                         )
                     }
 
-                    navigationController.pushViewController(
-                        backupsViewController,
-                        animated: true,
-                    )
+                    self.showSettingsViewController(backupsViewController)
                 },
             ))
         } else {
@@ -283,10 +342,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 ),
                 addBetaLabel: false,
                 actionBlock: { [weak self] in
-                    self?.navigationController?.pushViewController(
-                        LinkedDeviceBackupSettingsViewController(),
-                        animated: true,
-                    )
+                    self?.showSettingsViewController(LinkedDeviceBackupSettingsViewController())
                 },
             ))
         }
@@ -295,7 +351,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             withText: OWSLocalizedString("SETTINGS_DATA", comment: "Label for the 'data' section of the app settings."),
             actionBlock: { [weak self] in
                 let vc = DataSettingsTableViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.showSettingsViewController(vc)
             },
         ))
         contents.add(section2)
@@ -371,7 +427,7 @@ class AppSettingsViewController: OWSTableViewController2 {
                 },
                 actionBlock: { [weak self] in
                     let vc = PaymentsSettingsViewController(mode: .inAppSettings)
-                    self?.navigationController?.pushViewController(vc, animated: true)
+                    self?.showSettingsViewController(vc)
                 },
             ))
             contents.add(paymentsSection)
@@ -383,7 +439,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             withText: CommonStrings.help,
             actionBlock: { [weak self] in
                 let vc = HelpViewController()
-                self?.navigationController?.pushViewController(vc, animated: true)
+                self?.showSettingsViewController(vc)
             },
         ))
         section3.add(.item(
@@ -402,11 +458,20 @@ class AppSettingsViewController: OWSTableViewController2 {
                 withText: "Internal",
                 actionBlock: { [weak self] in
                     let vc = InternalSettingsViewController()
-                    self?.navigationController?.pushViewController(vc, animated: true)
+                    self?.showSettingsViewController(vc)
                 },
             ))
             contents.add(internalSection)
         }
+
+#if targetEnvironment(macCatalyst)
+        if detailNavigationController != nil {
+            for section in contents.sections {
+                section.hasBackground = false
+                section.hasSeparators = false
+            }
+        }
+#endif
 
         self.contents = contents
     }
@@ -446,8 +511,13 @@ class AppSettingsViewController: OWSTableViewController2 {
     }
 
     private func profileCellAvatarImageView() -> UIView {
+#if targetEnvironment(macCatalyst)
+        let avatarSizeClass: ConversationAvatarView.Configuration.SizeClass = .fortyFour
+#else
+        let avatarSizeClass: ConversationAvatarView.Configuration.SizeClass = .customDiameter(72)
+#endif
         let avatarImageView = ConversationAvatarView(
-            sizeClass: .customDiameter(72),
+            sizeClass: avatarSizeClass,
             localUserDisplayMode: .asUser,
         )
 
@@ -468,7 +538,11 @@ class AppSettingsViewController: OWSTableViewController2 {
 
         let nameLabel = UILabel()
         profileInfoStack.addArrangedSubview(nameLabel)
+#if targetEnvironment(macCatalyst)
+        nameLabel.font = UIFont.dynamicTypeBodyClamped.semibold()
+#else
         nameLabel.font = UIFont.dynamicTypeTitle2Clamped.medium()
+#endif
         if let fullName = localUserProfile?.filteredFullName?.nilIfEmpty {
             nameLabel.text = fullName
             nameLabel.textColor = Theme.primaryTextColor
@@ -510,6 +584,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             owsFailDebug("Missing local number")
         }
 
+#if !targetEnvironment(macCatalyst)
         if let localUsernameState {
             switch localUsernameState {
             case let .available(username, _):
@@ -529,6 +604,7 @@ class AppSettingsViewController: OWSTableViewController2 {
             )
             bioLabel?.layoutMargins.top = 8
         }
+#endif
 
         profileInfoStack.arrangedSubviews.last?.layoutMargins.bottom = 2
 
@@ -571,10 +647,7 @@ class AppSettingsViewController: OWSTableViewController2 {
     }
 
     private func didTapDonate() {
-        navigationController?.pushViewController(
-            DonationSettingsViewController(),
-            animated: true,
-        )
+        showSettingsViewController(DonationSettingsViewController())
     }
 }
 
@@ -611,3 +684,55 @@ extension AppSettingsViewController: UsernameLinkScanDelegate {
         }
     }
 }
+
+#if targetEnvironment(macCatalyst)
+final class AppSettingsSplitViewController: UISplitViewController {
+
+    let detailNavigationController: OWSNavigationController
+
+    init(
+        appSettingsViewController: AppSettingsViewController,
+        detailNavigationController: OWSNavigationController = OWSNavigationController(),
+        detailViewControllers: [UIViewController] = [],
+    ) {
+        self.detailNavigationController = detailNavigationController
+
+        super.init(style: .doubleColumn)
+
+        let showsDefaultDetail = detailViewControllers.isEmpty
+        appSettingsViewController.configureForSplitView(
+            detailNavigationController: detailNavigationController,
+            selectsProfileInitially: showsDefaultDetail,
+        )
+
+        let sidebarNavigationController = OWSNavigationController(rootViewController: appSettingsViewController)
+        let initialDetailViewControllers = if showsDefaultDetail {
+            [appSettingsViewController.makeProfileSettingsViewController()]
+        } else {
+            detailViewControllers
+        }
+        detailNavigationController.setViewControllers(initialDetailViewControllers, animated: false)
+
+        setViewController(sidebarNavigationController, for: .primary)
+        setViewController(detailNavigationController, for: .secondary)
+
+        preferredSplitBehavior = .tile
+        preferredDisplayMode = .oneBesideSecondary
+        primaryBackgroundStyle = .sidebar
+        presentsWithGesture = false
+        displayModeButtonVisibility = .never
+
+        minimumPrimaryColumnWidth = 240
+        maximumPrimaryColumnWidth = 300
+        preferredPrimaryColumnWidth = 270
+
+        modalPresentationStyle = .formSheet
+        preferredContentSize = CGSize(width: 920, height: 680)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+#endif

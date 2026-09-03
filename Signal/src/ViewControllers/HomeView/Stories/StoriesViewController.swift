@@ -309,7 +309,7 @@ class StoriesViewController: OWSViewController, StoryListDataSourceDelegate, Hom
         AssertIsOnMainThread()
 
         conversationSplitViewController?.selectedConversationViewController?.dismissMessageContextMenu(animated: true)
-        presentFormSheet(AppSettingsViewController.inModalNavigationController(), animated: true)
+        presentFormSheet(AppSettingsViewController.inModalViewController(), animated: true)
     }
 
     func showPrivacySettings() {

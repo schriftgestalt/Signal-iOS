@@ -36,8 +36,10 @@ open class OWSTableViewController2: OWSViewController, OWSNavigationChildControl
         applyContents(shouldReload: shouldReload)
     }
 
+    public var tableViewStyle: UITableView.Style = .insetGrouped
+
     public lazy var tableView: UITableView = {
-        let tableView = OWSTableView(frame: .zero, style: .insetGrouped)
+        let tableView = OWSTableView(frame: .zero, style: tableViewStyle)
         tableView.tableViewDelegate = self
         return tableView
     }()
@@ -76,6 +78,7 @@ open class OWSTableViewController2: OWSViewController, OWSNavigationChildControl
 
     public enum SelectionBehavior {
         case actionWithAutoDeselect
+        case actionWithoutAutoDeselect
         case toggleSelectionWithAction
     }
 
@@ -473,7 +476,33 @@ open class OWSTableViewController2: OWSViewController, OWSNavigationChildControl
         cell.backgroundColor = .clear
         cell.contentView.backgroundColor = .clear
 
-        guard section.hasBackground else { return }
+        let usesPersistentSelection: Bool
+        if case .actionWithoutAutoDeselect = selectionBehavior {
+            usesPersistentSelection = true
+            cell.accessoryType = .none
+        } else {
+            usesPersistentSelection = false
+        }
+
+        guard section.hasBackground else {
+            if usesPersistentSelection {
+                let selectedBackground = UIView()
+                let roundedHighlight = UIView()
+                roundedHighlight.backgroundColor = self.cellSelectedBackgroundColor
+                roundedHighlight.layer.cornerRadius = 12
+                roundedHighlight.layer.cornerCurve = .continuous
+                roundedHighlight.translatesAutoresizingMaskIntoConstraints = false
+                selectedBackground.addSubview(roundedHighlight)
+                NSLayoutConstraint.activate([
+                    roundedHighlight.leadingAnchor.constraint(equalTo: selectedBackground.leadingAnchor, constant: 8),
+                    roundedHighlight.trailingAnchor.constraint(equalTo: selectedBackground.trailingAnchor, constant: -8),
+                    roundedHighlight.topAnchor.constraint(equalTo: selectedBackground.topAnchor, constant: 2),
+                    roundedHighlight.bottomAnchor.constraint(equalTo: selectedBackground.bottomAnchor, constant: -2),
+                ])
+                cell.selectedBackgroundView = selectedBackground
+            }
+            return
+        }
 
         let cellBackgroundColor: UIColor
         let cellSelectedBackgroundColor: UIColor
@@ -931,6 +960,8 @@ open class OWSTableViewController2: OWSViewController, OWSNavigationChildControl
         switch selectionBehavior {
         case .actionWithAutoDeselect:
             tableView.deselectRow(at: indexPath, animated: false)
+        case .actionWithoutAutoDeselect:
+            break
         case .toggleSelectionWithAction:
             break
         }
@@ -940,7 +971,7 @@ open class OWSTableViewController2: OWSViewController, OWSNavigationChildControl
 
     public func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         switch selectionBehavior {
-        case .actionWithAutoDeselect:
+        case .actionWithAutoDeselect, .actionWithoutAutoDeselect:
             return
         case .toggleSelectionWithAction:
             performAction(indexPath: indexPath)

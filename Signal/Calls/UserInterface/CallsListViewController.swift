@@ -208,7 +208,7 @@ class CallsListViewController: OWSViewController, HomeTabViewController, CallSer
         AssertIsOnMainThread()
 
         conversationSplitViewController?.selectedConversationViewController?.dismissMessageContextMenu(animated: true)
-        presentFormSheet(AppSettingsViewController.inModalNavigationController(), animated: true)
+        presentFormSheet(AppSettingsViewController.inModalViewController(), animated: true)
     }
 
     private func startMultiselect() {

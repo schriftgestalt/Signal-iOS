@@ -1399,7 +1399,11 @@ extension ChatListViewController {
         let appSettingsViewController = AppSettingsViewController()
 
         var internalCompletion: (() -> Void)?
+#if targetEnvironment(macCatalyst)
+        var viewControllers: [UIViewController] = []
+#else
         var viewControllers: [UIViewController] = [appSettingsViewController]
+#endif
 
         switch mode {
         case nil:
@@ -1533,9 +1537,19 @@ extension ChatListViewController {
             viewControllers += [AccountSettingsViewController()]
         }
 
+        let viewControllerToPresent: UIViewController
+#if targetEnvironment(macCatalyst)
+        viewControllerToPresent = AppSettingsSplitViewController(
+            appSettingsViewController: appSettingsViewController,
+            detailNavigationController: navigationController,
+            detailViewControllers: viewControllers,
+        )
+#else
         navigationController.setViewControllers(viewControllers, animated: false)
+        viewControllerToPresent = navigationController
+#endif
         DispatchQueue.main.async { [weak self] in
-            self?.presentFormSheet(navigationController, animated: true) {
+            self?.presentFormSheet(viewControllerToPresent, animated: true) {
                 completion?()
                 internalCompletion?()
             }
