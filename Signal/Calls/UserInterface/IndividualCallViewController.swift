@@ -613,6 +613,8 @@ class IndividualCallViewController: OWSViewController, IndividualCallObserver {
             return
         }
 
+        guard view.bounds.width > 0, view.bounds.height > 0 else { return }
+
         localVideoView.configure(
             call: call,
             isFullScreen: isRenderingLocalVanityVideo,
@@ -852,9 +854,12 @@ class IndividualCallViewController: OWSViewController, IndividualCallObserver {
         remoteMemberView.isFullScreen = true
         remoteMemberView.isScreenShare = individualCall.isRemoteSharingScreen
 
-        // Layout controls immediately to avoid spurious animation.
-        for controls in [incomingVideoCallControls, incomingAudioCallControls] {
-            controls.layoutIfNeeded()
+        // Layout controls immediately to avoid spurious animation. The initial
+        // observer callback runs while the view can still have a temporary zero size.
+        if view.bounds.width > 0, view.bounds.height > 0 {
+            for controls in [incomingVideoCallControls, incomingAudioCallControls] {
+                controls.layoutIfNeeded()
+            }
         }
 
         let hideCallControls: Bool
