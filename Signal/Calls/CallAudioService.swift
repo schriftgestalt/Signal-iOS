@@ -405,7 +405,12 @@ class CallAudioService: IndividualCallObserver, GroupCallObserver {
     }
 
     private func prepareToPlay(sound: StandardSound) -> AudioPlayer? {
-        guard let newPlayer = Sounds.audioPlayer(forSound: .standard(sound), audioBehavior: .call) else {
+        // Incoming calls can end on another linked device before this device has
+        // microphone permission. Call sounds only need playback in that case;
+        // using `.call` would make AudioSession reject the activity because that
+        // behavior requires recording permission.
+        let audioBehavior: AudioBehavior = avAudioSession.recordPermission == .granted ? .call : .playback
+        guard let newPlayer = Sounds.audioPlayer(forSound: .standard(sound), audioBehavior: audioBehavior) else {
             owsFailDebug("unable to build player for sound: \(sound.displayName)")
             return nil
         }
