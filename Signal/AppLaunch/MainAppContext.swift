@@ -168,12 +168,31 @@ class MainAppContext: NSObject, AppContext {
     }
 
     func appSharedDataDirectoryPath() -> String {
+#if targetEnvironment(macCatalyst)
+        // The Catalyst target doesn't use Signal's iOS App Group entitlement.
+        // Keep its data in a bundle-specific Application Support directory instead.
+        let applicationSupportDirectory = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+        ).last!
+        return applicationSupportDirectory.appendingPathComponent(
+            Bundle.main.bundleIdentifier!,
+            isDirectory: true,
+        ).path
+#else
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: TSConstants.applicationGroup)!.path
+#endif
     }
 
     func appDatabaseBaseDirectoryPath() -> String { appSharedDataDirectoryPath() }
 
-    func appUserDefaults() -> UserDefaults { UserDefaults(suiteName: TSConstants.applicationGroup)! }
+    func appUserDefaults() -> UserDefaults {
+#if targetEnvironment(macCatalyst)
+        .standard
+#else
+        UserDefaults(suiteName: TSConstants.applicationGroup)!
+#endif
+    }
 
     func canPresentNotifications() -> Bool { true }
 
