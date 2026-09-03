@@ -20,8 +20,11 @@ end
 
 ENV['RINGRTC_PREBUILD_CHECKSUM'] = 'd3e2013ca3e4a490c7c6dbd840a90caa5ff6b2bc8b635d120b1d732ae2f77a84'
 # ENV['RINGRTC_USE_FILE_BASED_CAMERA'] = '1'
-pod 'SignalRingRTC', git: 'https://github.com/signalapp/ringrtc', tag: 'v2.71.0', inhibit_warnings: true
-# pod 'SignalRingRTC', path: '../ringrtc', testspecs: ["Tests"]
+if ENV['RINGRTC_LOCAL_PATH']
+  pod 'SignalRingRTC', path: File.expand_path(ENV['RINGRTC_LOCAL_PATH'], __dir__), inhibit_warnings: true
+else
+  pod 'SignalRingRTC', git: 'https://github.com/signalapp/ringrtc', tag: 'v2.71.0', inhibit_warnings: true
+end
 
 pod 'GRDB.swift/SQLCipher'
 # pod 'GRDB.swift/SQLCipher', path: '../GRDB.swift'
@@ -100,9 +103,24 @@ post_install do |installer|
   strip_valid_archs(installer)
   update_frameworks_script(installer)
   disable_non_development_pod_warnings(installer)
+  configure_ringrtc_catalyst(installer)
   fix_ringrtc_project_symlink(installer)
   fetch_ringrtc
   copy_acknowledgements
+end
+
+# RingRTC's podspec predates its Catalyst artifacts. Point Catalyst builds at
+# the Rust archive produced by Scripts/build-ringrtc-catalyst.
+def configure_ringrtc_catalyst(installer)
+  return unless ENV['RINGRTC_LOCAL_PATH']
+
+  installer.pods_project.targets.each do |target|
+    next unless target.name == 'SignalRingRTC'
+
+    target.build_configurations.each do |config|
+      config.build_settings['CARGO_BUILD_TARGET[sdk=macosx*][arch=arm64]'] = 'aarch64-apple-ios-macabi'
+    end
+  end
 end
 
 # Works around CocoaPods behavior designed for static libraries.
@@ -247,6 +265,8 @@ def fix_ringrtc_project_symlink(installer)
 end
 
 def fetch_ringrtc
+  return if ENV['RINGRTC_LOCAL_PATH']
+
   `make fetch-ringrtc`
 end
 

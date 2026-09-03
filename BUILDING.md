@@ -93,10 +93,30 @@ needed, verifies their pinned commits, and builds arm64 and x86_64 Catalyst
 archives. Its small BoringSSL build-system patch enables the existing Catalyst
 targets without changing cryptographic code.
 
+The published RingRTC and WebRTC archives also lack Catalyst slices. Build the
+pinned sources locally (the WebRTC build is large and can take a while), then
+install both source-built dependencies:
+
+```
+brew install coreutils protobuf
+cargo install cbindgen
+Scripts/build-ringrtc-catalyst
+LIBSIGNAL_LOCAL_PATH=../libsignal \
+    RINGRTC_LOCAL_PATH=../ringrtc \
+    bundle exec pod install
+```
+
+The RingRTC workflow currently builds Apple Silicon (`arm64`) only. It pins the
+RingRTC and WebRTC revisions, uses WebRTC's upstream Catalyst build support, and
+validates both resulting binaries as `MACCATALYST` before CocoaPods consumes
+them. Its source patch skips an iPad-only camera option that AVFoundation marks
+unavailable on Catalyst. The native Apple linker is used because Chromium's LLD
+cannot link the Catalyst system stubs shipped with current Xcode versions.
+
 The full app still does not link as a Catalyst application because the pinned
-RingRTC/WebRTC and MobileCoin artifacts only contain iOS device and simulator
-slices. Those dependencies must publish `maccatalyst` artifacts or be
-conditionally excluded before the Catalyst scheme can produce a runnable app.
+MobileCoin artifacts only contain iOS device and simulator slices. MobileCoin
+must publish a `maccatalyst` artifact, be built from source, or be conditionally
+excluded before the Catalyst scheme can produce a runnable app.
 
 ## Known issues
 

@@ -1,0 +1,12 @@
+diff --git a/src/ios/SignalRingRTC/SignalRingRTC/VideoCaptureController.swift b/src/ios/SignalRingRTC/SignalRingRTC/VideoCaptureController.swift
+index 4abff58..a68a2e1 100644
+--- a/src/ios/SignalRingRTC/SignalRingRTC/VideoCaptureController.swift
++++ b/src/ios/SignalRingRTC/SignalRingRTC/VideoCaptureController.swift
+@@ -58,2 +58,3 @@ public class VideoCaptureController {
+     public init() {
++        #if !targetEnvironment(macCatalyst)
+         if #available(iOS 16.0, *), captureSession.isMultitaskingCameraAccessSupported {
+@@ -61,2 +62,3 @@ public class VideoCaptureController {
+         }
++        #endif
+     }
