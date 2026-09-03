@@ -778,7 +778,11 @@ extension ConversationViewController: CVLoadCoordinatorDelegate {
         guard self.conversationStyle.type != .`default` else {
             // Once we built a normal style, never go back to
             // building an initial or placeholder style.
+            // A Catalyst split view can briefly detach this controller while moving
+            // it between its collapsed and expanded navigation-controller stacks.
+#if !targetEnvironment(macCatalyst)
             owsAssertDebug(navigationController != nil || viewState.isInPreviewPlatter)
+#endif
             return buildDefaultConversationStyle(type: .`default`)
         }
 
