@@ -68,7 +68,7 @@ extension HomeTabViewController {
             top: 0,
             leading: isInFloatingSidebar ? 2 : 0,
             bottom: 0,
-            trailing: 0,
+            trailing: isInFloatingSidebar ? 2 : 0,
         ))
 
         let barButtonView: UIView
