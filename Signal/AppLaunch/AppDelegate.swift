@@ -397,7 +397,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         loadingViewController: LoadingViewController?,
     ) async -> (AppSetup.FinalContinuation, DeviceSleepBlockObject) {
         let sleepBlockObject = DeviceSleepBlockObject(blockReason: "app launch")
+#if !targetEnvironment(macCatalyst)
         launchContext.deviceSleepManager.addBlock(blockObject: sleepBlockObject)
+#endif
 
         let _currentCall = AtomicValue<SignalCall?>(nil, lock: .init())
         let currentCall = CurrentCall(rawValue: _currentCall)
@@ -517,7 +519,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
                         launchInterface: launchInterface,
                         launchContext: launchContext,
                     )
+#if !targetEnvironment(macCatalyst)
                     finalContinuation.dependenciesBridge.deviceSleepManager?.removeBlock(blockObject: sleepBlockObject)
+#endif
                 }
             }
         }
