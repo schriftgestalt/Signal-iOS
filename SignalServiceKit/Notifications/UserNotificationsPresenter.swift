@@ -84,7 +84,12 @@ public class UserNotificationPresenter {
             let granted = try await Self.notificationCenter.requestAuthorization(options: [.badge, .sound, .alert])
             Logger.info("Notification permission? \(granted)")
         } catch {
+#if targetEnvironment(macCatalyst)
+            // Third-party Catalyst builds don't have Signal's push entitlement.
+            Logger.warn("Notification permission isn't available for this Catalyst build: \(error)")
+#else
             owsFailDebug("Notification permission request failed with error: \(error)")
+#endif
         }
         Self.notificationCenter.setNotificationCategories(UserNotificationConfig.allNotificationCategories)
     }

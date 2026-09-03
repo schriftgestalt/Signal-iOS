@@ -8,5 +8,8 @@ GCC_TREAT_WARNINGS_AS_ERRORS = YES
 MTL_TREAT_WARNINGS_AS_ERRORS = YES
 OTHER_SWIFT_FLAGS = $(inherited) -warnings-as-errors
 
+// Override this in Config/User.xcconfig with a prefix registered to your team.
+SIGNAL_CATALYST_BUNDLEID_PREFIX = $(SIGNAL_BUNDLEID_PREFIX)
+
 // User-specific overrides
 #include? "User.xcconfig"

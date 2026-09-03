@@ -21906,7 +21906,7 @@
 				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Signal/Signal-Catalyst.entitlements";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -21927,7 +21927,7 @@
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(SIGNAL_BUNDLEID_PREFIX).signal.catalyst";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(SIGNAL_CATALYST_BUNDLEID_PREFIX).signal.catalyst";
 				PRODUCT_NAME = Signal;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
@@ -22172,7 +22172,7 @@
 				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Signal/Signal-Catalyst.entitlements";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				"EXCLUDED_SOURCE_FILE_NAMES[arch=*]" = Signal/test/Assets/input_video.mp4;
@@ -22193,7 +22193,7 @@
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(SIGNAL_BUNDLEID_PREFIX).signal.catalyst";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(SIGNAL_CATALYST_BUNDLEID_PREFIX).signal.catalyst";
 				PRODUCT_NAME = Signal;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
@@ -22547,7 +22547,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_UNDEFINED_BEHAVIOR_SANITIZER_INTEGER = YES;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
-				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Signal/Signal-Catalyst.entitlements";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -22569,7 +22569,7 @@
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(SIGNAL_BUNDLEID_PREFIX).signal.catalyst";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(SIGNAL_CATALYST_BUNDLEID_PREFIX).signal.catalyst";
 				PRODUCT_NAME = Signal;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;
@@ -22593,7 +22593,7 @@
 				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "Signal/Signal-AppStore.entitlements";
-				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Signal/Signal-Catalyst.entitlements";
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				"EXCLUDED_SOURCE_FILE_NAMES[arch=*]" = Signal/test/Assets/input_video.mp4;
@@ -22614,7 +22614,7 @@
 				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(SIGNAL_BUNDLEID_PREFIX).signal";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(SIGNAL_BUNDLEID_PREFIX).signal.catalyst";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(SIGNAL_CATALYST_BUNDLEID_PREFIX).signal.catalyst";
 				PRODUCT_NAME = Signal;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = iphoneos;

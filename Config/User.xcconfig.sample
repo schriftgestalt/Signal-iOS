@@ -5,6 +5,10 @@
 
 OTHER_SWIFT_FLAGS = $(inherited) -no-warnings-as-errors
 
+// Catalyst keychain access requires a bundle identifier registered to your
+// development team. Use a unique reverse-DNS prefix here.
+// SIGNAL_CATALYST_BUNDLEID_PREFIX = org.example.signal-development
+
 // To use a test input file for the camera, uncomment the below line, uncomment
 // the relevant line in the Podfile to set RINGRTC_USE_FILE_BASED_CAMERA, and
 // put a video file at the below location

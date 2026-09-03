@@ -7,14 +7,22 @@ import Foundation
 
 public enum OWSFileSystem {
 
+    private static let appTemporaryDirectoryPath: String = {
+#if targetEnvironment(macCatalyst)
+        return (NSTemporaryDirectory() as NSString).appendingPathComponent(Bundle.main.bundleIdentifier!)
+#else
+        return NSTemporaryDirectory()
+#endif
+    }()
+
     private static let tempDirComplete = {
-        let dirPath = NSTemporaryDirectory().appendingPathComponent("ows_temp_\(UUID())")
+        let dirPath = appTemporaryDirectoryPath.appendingPathComponent("ows_temp_\(UUID())")
         owsPrecondition(OWSFileSystem.ensureDirectoryExists(dirPath, fileProtectionType: .complete))
         return dirPath
     }()
 
     private static let tempDirAfterFirstUnlock = {
-        let tmpPath = NSTemporaryDirectory()
+        let tmpPath = appTemporaryDirectoryPath
         owsPrecondition(OWSFileSystem.ensureDirectoryExists(tmpPath, fileProtectionType: .completeUntilFirstUserAuthentication))
         let dirPath = tmpPath.appendingPathComponent("ows_temp_\(UUID())")
         owsPrecondition(OWSFileSystem.ensureDirectoryExists(dirPath, fileProtectionType: .completeUntilFirstUserAuthentication))
@@ -41,7 +49,7 @@ public enum OWSFileSystem {
         ]
 
         let thresholdDate = CurrentAppContext().appLaunchTime
-        let dirPath = NSTemporaryDirectory()
+        let dirPath = appTemporaryDirectoryPath
         let fileNames: [String]
         do {
             fileNames = try FileManager.default.contentsOfDirectory(atPath: dirPath)
@@ -123,6 +131,7 @@ public enum OWSFileSystem {
             return false
         }
 
+#if !targetEnvironment(macCatalyst)
         var resourceAttrs = URLResourceValues()
         resourceAttrs.isExcludedFromBackup = true
         var resourceUrl = URL(fileURLWithPath: path)
@@ -134,6 +143,7 @@ public enum OWSFileSystem {
             owsFailDebug("Could not protect file or folder: \(error)")
             return false
         }
+#endif
 
         return true
     }

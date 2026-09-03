@@ -76,8 +76,21 @@ install` or after changing dependencies.
 
 Open `Signal.xcworkspace`, select `Signal-Catalyst` and a `My Mac (Mac
 Catalyst)` destination, then Run. If Xcode previously attempted an iOS or
-unprepared Catalyst build, use Product > Clean Build Folder first. The
-equivalent command-line build after preparing the workspace is:
+unprepared Catalyst build, use Product > Clean Build Folder first.
+
+The encrypted database key requires a development provisioning profile. Give
+the Catalyst app a bundle identifier owned by your team by adding a unique
+prefix to the Git-ignored `Config/User.xcconfig`:
+
+```
+SIGNAL_CATALYST_BUNDLEID_PREFIX = org.example.signal-development
+```
+
+In Xcode, enable automatic signing for the Signal target and select your team.
+The Catalyst entitlement file contains only the keychain access group; it does
+not request Signal's private App Group or push-notification capabilities.
+
+The equivalent command-line build after preparing the workspace is:
 
 ```
 xcodebuild \
@@ -91,8 +104,8 @@ xcodebuild \
 The application, `SignalUI`, and `SignalServiceKit` targets advertise Catalyst
 support. The notification service and share extensions remain iOS-only and are
 excluded from the Catalyst dependency graph. The Mac variant uses the distinct
-bundle identifier `$(SIGNAL_BUNDLEID_PREFIX).signal.catalyst` and does not load
-the iOS app's entitlement file.
+bundle identifier `$(SIGNAL_CATALYST_BUNDLEID_PREFIX).signal.catalyst` and does
+not load the iOS app's entitlement file.
 
 The published libsignal archive does not include Catalyst libraries. Build the
 pinned source locally and tell CocoaPods to use that checkout instead:
