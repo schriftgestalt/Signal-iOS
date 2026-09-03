@@ -113,10 +113,20 @@ them. Its source patch skips an iPad-only camera option that AVFoundation marks
 unavailable on Catalyst. The native Apple linker is used because Chromium's LLD
 cannot link the Catalyst system stubs shipped with current Xcode versions.
 
-The full app still does not link as a Catalyst application because the pinned
-MobileCoin artifacts only contain iOS device and simulator slices. MobileCoin
-must publish a `maccatalyst` artifact, be built from source, or be conditionally
-excluded before the Catalyst scheme can produce a runnable app.
+The pinned MobileCoin artifacts only contain iOS device and simulator slices.
+Payments can be omitted from the experimental Catalyst build while leaving the
+iOS dependency graph unchanged:
+
+```
+SIGNAL_DISABLE_MOBILECOIN=1 \
+    LIBSIGNAL_LOCAL_PATH=../libsignal \
+    RINGRTC_LOCAL_PATH=../ringrtc \
+    bundle exec pod install
+```
+
+Without the MobileCoin modules, SignalUI selects its disabled payments
+implementation and does not expose payments UI. Payment protobufs and storage
+models remain available because they do not depend on the MobileCoin SDK.
 
 ## Known issues
 

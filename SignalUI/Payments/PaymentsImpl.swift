@@ -5,9 +5,12 @@
 
 import Foundation
 public import LibSignalClient
+#if canImport(MobileCoin)
 public import MobileCoin
+#endif
 public import SignalServiceKit
 
+#if canImport(MobileCoin)
 public class PaymentsImpl: NSObject, PaymentsSwift {
 
     private let appReadiness: AppReadiness
@@ -1184,3 +1187,119 @@ extension Amount {
         )
     }
 }
+#else
+public final class PaymentsImpl: NSObject, PaymentsSwift {
+    public static let currentPaymentBalanceDidChange = Notification.Name("currentPaymentBalanceDidChange")
+    public static let maxPaymentMemoMessageLength: Int = 32
+
+    @MainActor
+    public init(appReadiness: AppReadiness) {
+        super.init()
+    }
+
+    public var shouldShowPaymentsUI: Bool { false }
+    public var paymentsEntropy: Data? { nil }
+    public var currentPaymentBalance: PaymentBalance? { nil }
+    public var passphrase: PaymentsPassphrase? { nil }
+    public var isKillSwitchActive: Bool { true }
+
+    public func walletAddressBase58() -> String? { nil }
+    public func updateCurrentPaymentBalance() {}
+    public func clearCurrentPaymentBalance() {}
+    public func didReceiveMCAuthError() {}
+
+    public func clearState(transaction: DBWriteTransaction) {}
+    public func scheduleReconciliationNow(transaction: DBWriteTransaction) {}
+
+    public func replaceAsUnidentified(
+        paymentModel oldPaymentModel: TSPaymentModel,
+        transaction: DBWriteTransaction,
+    ) {}
+
+    public func findPaymentModels(
+        withMCLedgerBlockIndex mcLedgerBlockIndex: UInt64,
+        mcIncomingTransactionPublicKey: Data,
+        transaction: DBReadTransaction,
+    ) -> [TSPaymentModel] {
+        []
+    }
+
+    public func isValidMobileCoinPublicAddress(_ publicAddressData: Data) -> Bool { false }
+    public func passphrase(forPaymentsEntropy paymentsEntropy: Data) -> PaymentsPassphrase? { nil }
+    public func paymentsEntropy(forPassphrase passphrase: PaymentsPassphrase) -> Data? { nil }
+    public func isValidPassphraseWord(_ word: String?) -> Bool { false }
+
+    public func getEstimatedFee(forPaymentAmount paymentAmount: TSPaymentAmount) async throws -> TSPaymentAmount {
+        throw PaymentsError.notEnabled
+    }
+
+    public func prepareOutgoingPayment(
+        recipient: SendPaymentRecipient,
+        paymentAmount: TSPaymentAmount,
+        memoMessage: String?,
+        isOutgoingTransfer: Bool,
+        canDefragment: Bool,
+    ) async throws -> PreparedPayment {
+        throw PaymentsError.notEnabled
+    }
+
+    public func initiateOutgoingPayment(preparedPayment: PreparedPayment) async throws -> TSPaymentModel {
+        throw PaymentsError.notEnabled
+    }
+
+    public func maximumPaymentAmount() async throws -> TSPaymentAmount {
+        throw PaymentsError.notEnabled
+    }
+
+    public func blockOnOutgoingVerification(paymentModel: TSPaymentModel) async throws -> Bool { false }
+
+    public func unmaskReceiptAmount(data: Data?) -> DisabledMobileCoinAmount? { nil }
+
+    public func updateLastKnownLocalPaymentAddressProtoData(transaction: DBWriteTransaction) {
+        SSKEnvironment.shared.paymentsHelperRef.setLastKnownLocalPaymentAddressProtoData(nil, transaction: transaction)
+    }
+
+    public static func formatAsBase58(publicAddress: MobileCoin.PublicAddress) -> String { "" }
+    public static func parseAsPublicAddress(url: URL) -> MobileCoin.PublicAddress? { nil }
+    public static func parse(publicAddressBase58 base58: String) -> MobileCoin.PublicAddress? { nil }
+}
+
+public struct DisabledMobileCoinAmount {
+    public let value: UInt64
+
+    public var tsPaymentAmount: TSPaymentAmount? {
+        TSPaymentAmount(currency: .mobileCoin, picoMob: value)
+    }
+}
+
+public final class PaymentsEventsMainApp: NSObject, PaymentsEvents {
+    public func willInsertPayment(_ paymentModel: TSPaymentModel, transaction: DBWriteTransaction) {}
+    public func willUpdatePayment(_ paymentModel: TSPaymentModel, transaction: DBWriteTransaction) {}
+    public func updateLastKnownLocalPaymentAddressProtoData(transaction: DBWriteTransaction) {}
+    public func paymentsStateDidChange() {}
+
+    public func clearState(transaction: DBWriteTransaction) {
+        SSKEnvironment.shared.paymentsHelperRef.clearState(transaction: transaction)
+    }
+}
+
+public enum SendPaymentRecipientImpl: SendPaymentRecipient {
+    case address(address: SignalServiceAddress)
+    case publicAddress(publicAddress: MobileCoin.PublicAddress)
+
+    public var address: SignalServiceAddress? {
+        switch self {
+        case .address(let address): address
+        case .publicAddress: nil
+        }
+    }
+
+    public var isIdentifiedPayment: Bool { address != nil }
+}
+
+public struct PreparedPaymentImpl: PreparedPayment {
+    public let transaction: MobileCoin.Transaction
+    public let receipt: MobileCoin.Receipt
+    public let feeAmount: TSPaymentAmount
+}
+#endif

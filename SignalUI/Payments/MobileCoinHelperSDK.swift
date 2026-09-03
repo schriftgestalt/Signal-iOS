@@ -3,8 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import MobileCoin
 public import SignalServiceKit
+
+#if canImport(MobileCoin)
+import MobileCoin
 
 public class MobileCoinHelperSDK: MobileCoinHelper {
 
@@ -21,3 +23,6 @@ public class MobileCoinHelperSDK: MobileCoinHelper {
         MobileCoin.PublicAddress(serializedData: addressData) != nil
     }
 }
+#else
+public typealias MobileCoinHelperSDK = MobileCoinHelperMinimal
+#endif

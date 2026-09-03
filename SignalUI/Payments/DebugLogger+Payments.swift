@@ -4,8 +4,10 @@
 //
 
 import Foundation
-import Logging
 public import SignalServiceKit
+
+#if canImport(Logging)
+import Logging
 
 // NOTE: There are two separate classes with the name Logger
 //       being used in this file.
@@ -83,3 +85,8 @@ public extension DebugLogger {
         }
     }
 }
+#else
+public extension DebugLogger {
+    static func configureSwiftLogging() {}
+}
+#endif

@@ -3,8 +3,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-public import MobileCoin
 public import SignalServiceKit
+
+#if canImport(MobileCoin)
+public import MobileCoin
+#else
+/// Compile-time placeholders used when payments are disabled for Catalyst.
+public enum MobileCoin {
+    public struct PublicAddress: Sendable {}
+    public struct Receipt: Sendable {}
+    public struct Transaction: Sendable {}
+}
+#endif
 
 @objc
 public protocol Payments: AnyObject {

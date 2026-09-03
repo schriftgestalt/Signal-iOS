@@ -3,9 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import MobileCoin
 import SignalServiceKit
 import SignalUI
+
+#if canImport(MobileCoin)
+import MobileCoin
+#endif
 
 class PaymentsTransferOutViewController: OWSTableViewController2, UITextFieldDelegate,
     SendPaymentViewDelegate, PaymentsQRScanDelegate

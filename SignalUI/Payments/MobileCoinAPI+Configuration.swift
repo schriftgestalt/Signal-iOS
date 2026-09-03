@@ -4,10 +4,13 @@
 //
 
 import Foundation
+#if canImport(MobileCoin) && canImport(LibMobileCoin)
 import LibMobileCoin
 import MobileCoin
 import SignalServiceKit
+#endif
 
+#if canImport(MobileCoin) && canImport(LibMobileCoin)
 extension MobileCoinAPI {
 
     // MARK: - Environment
@@ -832,3 +835,4 @@ extension LibMobileCoin.HTTPMethod {
         }
     }
 }
+#endif

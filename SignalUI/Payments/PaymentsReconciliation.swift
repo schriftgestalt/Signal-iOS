@@ -4,9 +4,12 @@
 //
 
 import Foundation
+#if canImport(MobileCoin)
 public import MobileCoin
 public import SignalServiceKit
+#endif
 
+#if canImport(MobileCoin)
 public class PaymentsReconciliation {
 
     private let appReadiness: AppReadiness
@@ -1246,3 +1249,4 @@ private extension Array {
         isEmpty ? nil : self
     }
 }
+#endif

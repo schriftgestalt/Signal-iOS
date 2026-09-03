@@ -4,9 +4,12 @@
 //
 
 import Foundation
+#if canImport(MobileCoin)
 import MobileCoin
 public import SignalServiceKit
+#endif
 
+#if canImport(MobileCoin)
 public class MobileCoinAPI {
 
     // MARK: - Passphrases & Entropy
@@ -808,3 +811,4 @@ extension MobileCoinAPI {
         }
     }
 }
+#endif

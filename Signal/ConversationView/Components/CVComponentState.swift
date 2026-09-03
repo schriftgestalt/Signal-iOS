@@ -4,7 +4,6 @@
 //
 
 import LibSignalClient
-import MobileCoin
 public import SignalServiceKit
 import SignalUI
 

@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-import MobileCoin
 public import SignalServiceKit
+
+#if canImport(MobileCoin)
+import MobileCoin
+#endif
 
 public extension PaymentsFormat {
 
@@ -226,7 +229,11 @@ public extension PaymentsFormat {
             "PAYMENTS_PREVIEW_TEXT_QUOTED_REPLY",
             comment: "Payments Preview Text shown in quoted replies, for payments. Embeds {{ Amount sent (number), Currency (e.g. 'MOB') }}",
         )
+        #if canImport(MobileCoin)
         let currencyName = TokenId.MOB.name
+        #else
+        let currencyName = PaymentsConstants.mobileCoinCurrencyIdentifier
+        #endif
         return String.nonPluralLocalizedStringWithFormat(template, formattedAmount, currencyName)
     }
 }
