@@ -114,7 +114,7 @@ public class PreKeyManagerImpl: PreKeyManager {
     }
 
     fileprivate func checkPreKeys(shouldThrottle: Bool) async throws {
-        guard CurrentAppContext().isMainAppAndActive else {
+        guard await CurrentAppContext().isMainAppAndActiveIsolated else {
             throw OWSGenericError("must be the main app")
         }
 
