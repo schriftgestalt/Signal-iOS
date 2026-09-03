@@ -154,6 +154,10 @@ public extension UIDevice {
 
     @objc
     func ows_setOrientation(_ orientation: UIDeviceOrientation) {
+#if targetEnvironment(macCatalyst)
+        // Catalyst windows can be resized but do not support device orientation.
+        return
+#else
         // XXX - This is not officially supported, but there's no other way to programmatically rotate
         // the interface.
         let orientationKey = "orientation"
@@ -163,5 +167,6 @@ public extension UIDevice {
         // but allegedly helps ensure related rotation delegate methods are called.
         // https://stackoverflow.com/questions/20987249/how-do-i-programmatically-set-device-orientation-in-ios7
         UINavigationController.attemptRotationToDeviceOrientation()
+#endif
     }
 }
