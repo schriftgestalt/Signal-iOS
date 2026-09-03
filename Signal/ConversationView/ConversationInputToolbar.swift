@@ -643,11 +643,16 @@ public class ConversationInputToolbar: UIView, QuotedReplyPreviewDelegate {
         )
         contentViewSuperview.addSubview(contentView)
         contentView.translatesAutoresizingMaskIntoConstraints = false
+#if targetEnvironment(macCatalyst)
+        let bottomContentInset: CGFloat = 4
+#else
+        let bottomContentInset: CGFloat = 0
+#endif
         NSLayoutConstraint.activate([
             contentView.topAnchor.constraint(equalTo: topAnchor),
             contentView.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            contentView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -bottomContentInset),
         ])
     }
 
