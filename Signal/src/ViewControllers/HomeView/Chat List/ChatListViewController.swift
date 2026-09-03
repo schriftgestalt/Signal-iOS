@@ -167,7 +167,6 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
             applyDefaultBackButton()
         }
 
-        viewState.searchResultsController.viewWillAppear(animated)
         viewState.backupDownloadProgressView.willAppear()
         viewState.backupExportProgressView.willAppear()
         viewState.localFileBackupRestoreProgressView.willAppear()
@@ -241,8 +240,6 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         requestReviewIfAppropriate()
         showFYISheetIfNecessary()
 
-        viewState.searchResultsController.viewDidAppear(animated)
-
         if viewState.shouldFocusSearchOnAppear {
             viewState.shouldFocusSearchOnAppear = false
             DispatchQueue.main.async {
@@ -267,13 +264,11 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         super.viewWillDisappear(animated)
 
         isViewVisible = false
-        searchResultsController.viewWillDisappear(animated)
     }
 
     override public func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
 
-        searchResultsController.viewDidDisappear(animated)
         viewState.backupDownloadProgressView.didDisappear()
         viewState.backupExportProgressView.didDisappear()
         viewState.localFileBackupRestoreProgressView.didDisappear()

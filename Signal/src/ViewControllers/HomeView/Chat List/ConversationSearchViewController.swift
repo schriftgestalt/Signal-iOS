@@ -85,13 +85,14 @@ class ConversationSearchViewController: OWSViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
+        hasEverAppeared = true
+
         guard hasThemeChanged else {
             return
         }
         hasThemeChanged = false
 
         reloadTableData()
-        self.hasEverAppeared = true
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
