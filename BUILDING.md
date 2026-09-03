@@ -61,8 +61,23 @@ Build and Run and you are ready to go!
 
 The `Signal-Catalyst` scheme builds the existing Signal app target for the
 Mac Catalyst destination, so the iOS and Mac variants continue to share their
-source and resource membership. In Xcode, select `Signal-Catalyst` and a
-`My Mac (Mac Catalyst)` destination. The equivalent command-line build is:
+source and resource membership. Prepare the CocoaPods workspace before opening
+it in Xcode:
+
+```
+Scripts/prepare-catalyst
+```
+
+This selects the local Catalyst builds of libsignal and RingRTC and removes
+MobileCoin from the generated Catalyst dependency graph. These choices happen
+when CocoaPods generates the workspace; environment variables set in a terminal
+afterwards are not inherited by Xcode. Rerun the script after a normal `pod
+install` or after changing dependencies.
+
+Open `Signal.xcworkspace`, select `Signal-Catalyst` and a `My Mac (Mac
+Catalyst)` destination, then Run. If Xcode previously attempted an iOS or
+unprepared Catalyst build, use Product > Clean Build Folder first. The
+equivalent command-line build after preparing the workspace is:
 
 ```
 xcodebuild \
@@ -89,9 +104,9 @@ LIBSIGNAL_LOCAL_PATH=../libsignal bundle exec pod install
 ```
 
 The build script creates sibling `libsignal` and `boring-catalyst` checkouts as
-needed, verifies their pinned commits, and builds arm64 and x86_64 Catalyst
-archives. Its small BoringSSL build-system patch enables the existing Catalyst
-targets without changing cryptographic code.
+needed, verifies their pinned commits, and builds an arm64 Catalyst archive. Its
+small BoringSSL build-system patch enables the existing Catalyst target without
+changing cryptographic code.
 
 The published RingRTC and WebRTC archives also lack Catalyst slices. Build the
 pinned sources locally (the WebRTC build is large and can take a while), then
@@ -123,6 +138,9 @@ SIGNAL_DISABLE_MOBILECOIN=1 \
     RINGRTC_LOCAL_PATH=../ringrtc \
     bundle exec pod install
 ```
+
+`Scripts/prepare-catalyst` performs this step and checks that all three local
+Catalyst artifacts exist first.
 
 Without the MobileCoin modules, SignalUI selects its disabled payments
 implementation and does not expose payments UI. Payment protobufs and storage

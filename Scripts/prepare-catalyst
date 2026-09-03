@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: AGPL-3.0-only
+
+set -euo pipefail
+
+readonly SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+readonly REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+readonly CHECKOUT_ROOT="$(cd "${REPO_ROOT}/.." && pwd)"
+readonly LIBSIGNAL_DIR="${LIBSIGNAL_DIR:-${CHECKOUT_ROOT}/libsignal}"
+readonly RINGRTC_DIR="${RINGRTC_DIR:-${CHECKOUT_ROOT}/ringrtc}"
+
+require_file() {
+  local path="$1"
+  local build_script="$2"
+
+  if [[ ! -f "${path}" ]]; then
+    echo "error: missing Catalyst artifact: ${path}" >&2
+    echo "Run ${build_script} first." >&2
+    exit 1
+  fi
+}
+
+if ! command -v bundle >/dev/null 2>&1; then
+  echo "error: missing required command: bundle" >&2
+  exit 1
+fi
+
+require_file \
+  "${LIBSIGNAL_DIR}/target/aarch64-apple-ios-macabi/release/libsignal_ffi.a" \
+  "Scripts/build-libsignal-catalyst"
+require_file \
+  "${RINGRTC_DIR}/out/release/libringrtc/aarch64-apple-ios-macabi/libringrtc.a" \
+  "Scripts/build-ringrtc-catalyst"
+require_file \
+  "${RINGRTC_DIR}/out/release/WebRTC.xcframework/ios-arm64-maccatalyst/WebRTC.framework/Versions/A/WebRTC" \
+  "Scripts/build-ringrtc-catalyst"
+
+cd "${REPO_ROOT}"
+env \
+  SIGNAL_DISABLE_MOBILECOIN=1 \
+  LIBSIGNAL_LOCAL_PATH="${LIBSIGNAL_DIR}" \
+  RINGRTC_LOCAL_PATH="${RINGRTC_DIR}" \
+  bundle exec pod install
+
+echo
+echo "The workspace is prepared for Apple Silicon Mac Catalyst."
+echo "Open Signal.xcworkspace, select Signal-Catalyst and My Mac (Mac Catalyst), then Run."
+echo "If Xcode previously built the iOS pod graph, use Product > Clean Build Folder first."
