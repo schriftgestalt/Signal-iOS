@@ -935,7 +935,14 @@ public class AttachmentDownloadManagerImpl: AttachmentDownloadManager {
             case .transitTier:
                 // We only download from the latest transit tier info.
                 guard let transitTierInfo = attachment.latestTransitTierInfo else {
+#if targetEnvironment(macCatalyst)
+                    // Link-and-sync can leave Catalyst with attachment references whose
+                    // transit-tier metadata is no longer available. Drop these queue
+                    // entries as ordinary permanent failures instead of trapping Debug.
+                    return .unretryableError(OWSGenericError("Attempting to download an attachment without cdn info"))
+#else
                     return .unretryableError(OWSAssertionError("Attempting to download an attachment without cdn info"))
+#endif
                 }
                 guard let attachmentKey = try? AttachmentKey(combinedKey: transitTierInfo.encryptionKey) else {
                     return .unretryableError(OWSAssertionError("can't download file with malformed attachment key"))
