@@ -137,6 +137,8 @@ class GroupCallErrorView: UIView {
         button.isHidden = isCompact
         miniBlockIndicator.isHidden = !isCompact
 
+        guard bounds.width > 0, bounds.height > 0 else { return }
+
         layoutIfNeeded()
 
         // The error text is easily truncated in small cells with large dynamic type.
