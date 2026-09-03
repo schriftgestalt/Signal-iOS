@@ -103,9 +103,7 @@ class IncomingCallControls: UIView {
         vStack.autoSetDimension(.width, toSize: 430, relation: .lessThanOrEqual)
         vStack.autoAlignAxis(toSuperviewAxis: .vertical)
 
-        NSLayoutConstraint.autoSetPriority(.defaultHigh - 1) {
-            vStack.autoPinEdge(toSuperviewSafeArea: .bottom, withInset: 56)
-        }
+        vStack.autoPinEdge(toSuperviewSafeArea: .bottom, withInset: 56).priority = .defaultHigh - 1
         vStack.autoPinEdge(toSuperviewEdge: .top)
     }
 

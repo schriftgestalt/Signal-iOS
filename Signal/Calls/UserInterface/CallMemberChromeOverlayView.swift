@@ -30,10 +30,16 @@ class CallMemberChromeOverlayView: UIView, CallMemberComposableView {
         super.init(frame: .zero)
 
         self.addLayoutGuide(layoutGuide)
+        // A member view can briefly have a zero frame while it is being reparented.
+        // Keep the preferred inset without requiring a negative layout-guide size.
+        let bottomConstraint = layoutGuide.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -inset)
+        bottomConstraint.priority = .required - 1
+        let trailingConstraint = layoutGuide.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -inset)
+        trailingConstraint.priority = .required - 1
         layoutGuideConstraints.append(layoutGuide.topAnchor.constraint(equalTo: self.topAnchor, constant: inset))
-        layoutGuideConstraints.append(layoutGuide.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -inset))
+        layoutGuideConstraints.append(bottomConstraint)
         layoutGuideConstraints.append(layoutGuide.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: inset))
-        layoutGuideConstraints.append(layoutGuide.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -inset))
+        layoutGuideConstraints.append(trailingConstraint)
         NSLayoutConstraint.activate(layoutGuideConstraints)
 
         muteIndicatorCircleView.isHidden = true

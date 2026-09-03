@@ -151,9 +151,7 @@ class CallControls: UIView {
             withInset: HeightConstants.bottomPadding,
             relation: .lessThanOrEqual,
         )
-        NSLayoutConstraint.autoSetPriority(.defaultHigh - 1) {
-            controlsStack.autoPinEdge(toSuperviewSafeArea: .bottom, withInset: 56)
-        }
+        controlsStack.autoPinEdge(toSuperviewSafeArea: .bottom, withInset: 56).priority = .defaultHigh - 1
         controlsStack.autoPinEdge(toSuperviewEdge: .top)
 
         updateControls()
