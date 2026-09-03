@@ -114,7 +114,7 @@ class ConversationBottomPanelView: UIView {
             updateBackgroundPanelConstraints()
         } else {
 #if targetEnvironment(macCatalyst)
-            let bottomContentInset: CGFloat = 4
+            let bottomContentInset: CGFloat = 16
 #else
             let bottomContentInset: CGFloat = UIDevice.current.hasIPhoneXNotch ? 0 : 12
 #endif
