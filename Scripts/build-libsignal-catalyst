@@ -49,30 +49,39 @@ verify_commit() {
 validate_archive() {
   local archive="$1"
   local target="$2"
-  local object_name
   local validation_dir
   local build_info
-
-  object_name="$(ar -t "${archive}" | awk '/\.o$/ && object_name == "" { object_name = $0 } END { print object_name }')"
-  if [[ -z "${object_name}" ]]; then
-    echo "error: ${archive} does not contain an object file" >&2
-    exit 1
-  fi
+  local object_count=0
+  local platform_count=0
 
   validation_dir="${TEMP_DIR}/validation-${target}"
   mkdir -p "${validation_dir}"
-  build_info="$({
+  (
     cd "${validation_dir}"
-    ar -x "${archive}" "${object_name}"
-    xcrun vtool -show-build "${object_name}"
-  })"
+    ar -x "${archive}"
+  )
 
-  if ! grep -q 'platform MACCATALYST' <<< "${build_info}"; then
-    echo "error: ${archive} is not marked for Mac Catalyst" >&2
+  while IFS= read -r -d '' object; do
+    object_count=$((object_count + 1))
+    build_info="$(xcrun vtool -show-build "${object}" 2>/dev/null || true)"
+    if [[ -z "${build_info}" ]]; then
+      # C/C++ objects built with LTO are LLVM bitcode and have no Mach-O load commands.
+      continue
+    fi
+    platform_count=$((platform_count + 1))
+    if ! grep -q 'platform MACCATALYST' <<< "${build_info}"; then
+      echo "error: ${archive} contains a non-Catalyst object: $(basename "${object}")" >&2
+      grep 'platform ' <<< "${build_info}" >&2 || true
+      exit 1
+    fi
+  done < <(find "${validation_dir}" -type f -name '*.o' -print0)
+
+  if [[ "${object_count}" -eq 0 || "${platform_count}" -eq 0 ]]; then
+    echo "error: ${archive} does not contain a verifiable Mach-O object" >&2
     exit 1
   fi
 
-  echo "Validated ${target}: MACCATALYST"
+  echo "Validated ${target}: ${platform_count}/${object_count} Mach-O objects are MACCATALYST; the remainder are LLVM bitcode"
 }
 
 require_command ar
@@ -102,9 +111,7 @@ git -C "${BORING_DIR}" submodule update --init --recursive
 
 readonly RUST_TOOLCHAIN="$(tr -d '[:space:]' < "${LIBSIGNAL_DIR}/rust-toolchain")"
 rustup toolchain install "${RUST_TOOLCHAIN}" --profile minimal
-rustup target add --toolchain "${RUST_TOOLCHAIN}" \
-  aarch64-apple-ios-macabi \
-  x86_64-apple-ios-macabi
+rustup target add --toolchain "${RUST_TOOLCHAIN}" aarch64-apple-ios-macabi
 
 readonly TEMP_DIR="$(mktemp -d)"
 readonly CARGO_CONFIG="${TEMP_DIR}/cargo-config.toml"
@@ -138,7 +145,7 @@ chmod +x "${CARGO_WRAPPER_DIR}/cargo"
 
 readonly REAL_CARGO="$(rustup which --toolchain "${RUST_TOOLCHAIN}" cargo)"
 readonly REAL_RUSTC="$(rustup which --toolchain "${RUST_TOOLCHAIN}" rustc)"
-for target in aarch64-apple-ios-macabi x86_64-apple-ios-macabi; do
+for target in aarch64-apple-ios-macabi; do
   echo "Building libsignal for ${target}"
   env \
     PATH="${CARGO_WRAPPER_DIR}:${PATH}" \
