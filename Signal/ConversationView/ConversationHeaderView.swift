@@ -73,6 +73,7 @@ class ConversationHeaderView: UIView {
         translatesAutoresizingMaskIntoConstraints = false
 
         let titleColumns = UIStackView(arrangedSubviews: [titleLabel, titleIconView])
+        titleColumns.alignment = .center
         titleColumns.spacing = 5
         titleColumns.translatesAutoresizingMaskIntoConstraints = false
         // There is a strange bug where an initial height of 0
