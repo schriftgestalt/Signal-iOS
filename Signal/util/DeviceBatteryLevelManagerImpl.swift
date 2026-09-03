@@ -22,12 +22,16 @@ public class DeviceBatteryLevelMonitorImpl: DeviceBatteryLevelMonitor {
     }
 
     public var batteryLevel: Float {
-        // On simulators, the battery level always reports -1.0 (invalid).
+        // On simulators and Catalyst, the battery level reports -1.0 (invalid).
+#if targetEnvironment(macCatalyst)
+        return 1
+#else
         if Platform.isSimulator {
             return 1
         } else {
             return UIDevice.current.batteryLevel
         }
+#endif
     }
 
     public var notification: Notification.Name { UIDevice.batteryLevelDidChangeNotification }
