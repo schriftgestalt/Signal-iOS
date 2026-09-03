@@ -113,6 +113,11 @@ class ConversationBottomPanelView: UIView {
             // if safe area insets won't ever change (eg home button iPhones).
             updateBackgroundPanelConstraints()
         } else {
+#if targetEnvironment(macCatalyst)
+            let bottomContentInset: CGFloat = 4
+#else
+            let bottomContentInset: CGFloat = UIDevice.current.hasIPhoneXNotch ? 0 : 12
+#endif
             addConstraints([
                 backgroundView.topAnchor.constraint(equalTo: topAnchor),
                 backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -124,7 +129,7 @@ class ConversationBottomPanelView: UIView {
                 contentLayoutGuide.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor),
                 contentLayoutGuide.bottomAnchor.constraint(
                     equalTo: safeAreaLayoutGuide.bottomAnchor,
-                    constant: UIDevice.current.hasIPhoneXNotch ? 0 : -12,
+                    constant: -bottomContentInset,
                 ),
             ])
 
