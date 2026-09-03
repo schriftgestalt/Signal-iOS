@@ -386,6 +386,13 @@ public extension ManualLayoutView {
         // be ambiguous.
         let widthConstraint = subview.autoSetDimension(.width, toSize: 0)
         let heightConstraint = subview.autoSetDimension(.height, toSize: 0)
+#if targetEnvironment(macCatalyst)
+        // Catalyst may solve a UIVisualEffectView's content constraints before
+        // the first manual-layout pass replaces these temporary zero constants.
+        // Let required internal content constraints win during that transition.
+        widthConstraint.priority = .init(999)
+        heightConstraint.priority = .init(999)
+#endif
         wrapper.addLayoutBlock { _ in
             widthConstraint.constant = subview.width
             heightConstraint.constant = subview.height
