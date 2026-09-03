@@ -703,6 +703,11 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
     func updateCellVisibility() {
         AssertIsOnMainThread()
 
+        // viewWillAppear may run before Catalyst has attached the table view to
+        // a window. Querying visibleCells during that interval forces an invalid
+        // zero-sized table layout; willDisplay handles cells after attachment.
+        guard tableView.window != nil else { return }
+
         for cell in tableView.visibleCells {
             guard let cell = cell as? ChatListCell else {
                 continue
@@ -719,6 +724,8 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
 
     private func ensureCellAnimations() {
         AssertIsOnMainThread()
+
+        guard tableView.window != nil else { return }
 
         for cell in tableView.visibleCells {
             guard let cell = cell as? ChatListCell else {
