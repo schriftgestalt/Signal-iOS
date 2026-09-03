@@ -180,21 +180,30 @@ extension UIViewController {
     public func ows_showNoMicrophonePermissionActionSheet() {
         AssertIsOnMainThread()
 
-        let actionSheet = ActionSheetController(
-            title: OWSLocalizedString(
-                "CALL_AUDIO_PERMISSION_TITLE",
-                comment: "Alert title when calling and permissions for microphone are missing",
-            ),
-            message: OWSLocalizedString(
-                "CALL_AUDIO_PERMISSION_MESSAGE",
-                comment: "Alert message when calling and permissions for microphone are missing",
-            ),
+        let title = OWSLocalizedString(
+            "CALL_AUDIO_PERMISSION_TITLE",
+            comment: "Alert title when calling and permissions for microphone are missing",
+        )
+        let message = OWSLocalizedString(
+            "CALL_AUDIO_PERMISSION_MESSAGE",
+            comment: "Alert message when calling and permissions for microphone are missing",
         )
 
+#if targetEnvironment(macCatalyst)
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: CommonStrings.openSystemSettingsButton, style: .default) { _ in
+            let settingsUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!
+            CurrentAppContext().open(settingsUrl, completion: nil)
+        })
+        alertController.addAction(UIAlertAction(title: CommonStrings.dismissButton, style: .cancel))
+        present(alertController, animated: true)
+#else
+        let actionSheet = ActionSheetController(title: title, message: message)
         if let openSettingsAction = AppContextUtils.openSystemSettingsAction() {
             actionSheet.addAction(openSettingsAction)
         }
         actionSheet.addAction(OWSActionSheets.dismissAction)
         self.presentActionSheet(actionSheet)
+#endif
     }
 }
