@@ -747,9 +747,14 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
         } else {
             useSidebarChatListCellAppearance = false
         }
-        // We need to add/remove horizotal padding around table view...
-        containerView.tableViewHorizontalInset = useSidebarChatListCellAppearance ? 16 : 0
-        // ... and tell ChatListCell to use rounded corners if there is non-zero padding.
+        // Catalyst already provides spacing around the split view's sidebar.
+#if targetEnvironment(macCatalyst)
+        let sidebarHorizontalInset: CGFloat = 0
+#else
+        let sidebarHorizontalInset: CGFloat = 16
+#endif
+        containerView.tableViewHorizontalInset = useSidebarChatListCellAppearance ? sidebarHorizontalInset : 0
+        // Tell ChatListCell to use rounded corners when displayed in the sidebar.
         tableDataSource.useSideBarChatListCellAppearance = useSidebarChatListCellAppearance
     }
 
