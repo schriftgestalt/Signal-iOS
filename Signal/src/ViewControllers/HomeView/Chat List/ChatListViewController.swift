@@ -1539,23 +1539,30 @@ extension ChatListViewController {
             viewControllers += [AccountSettingsViewController()]
         }
 
-        let viewControllerToPresent: UIViewController
 #if targetEnvironment(macCatalyst)
-        viewControllerToPresent = AppSettingsSplitViewController(
+        let settingsViewController = AppSettingsSplitViewController(
             appSettingsViewController: appSettingsViewController,
             detailNavigationController: navigationController,
             detailViewControllers: viewControllers,
         )
-#else
-        navigationController.setViewControllers(viewControllers, animated: false)
-        viewControllerToPresent = navigationController
-#endif
-        DispatchQueue.main.async { [weak self] in
-            self?.presentFormSheet(viewControllerToPresent, animated: true) {
+        DispatchQueue.main.async {
+            AppEnvironment.shared.windowManagerRef.showSettingsWindow(
+                settingsViewController,
+                replaceExistingContent: mode != nil,
+            ) {
                 completion?()
                 internalCompletion?()
             }
         }
+#else
+        navigationController.setViewControllers(viewControllers, animated: false)
+        DispatchQueue.main.async { [weak self] in
+            self?.presentFormSheet(navigationController, animated: true) {
+                completion?()
+                internalCompletion?()
+            }
+        }
+#endif
     }
 }
 
