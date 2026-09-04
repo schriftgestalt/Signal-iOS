@@ -382,7 +382,10 @@ class WindowManager {
                 origin: .zero,
                 size: viewController.preferredContentSize,
             ))
-            settingsWindow.windowLevel = .normal
+            // Catalyst hosts elevated UIWindows like the existing call window
+            // separately from the main app content. A normal-level UIWindow is
+            // instead composited into the main window.
+            settingsWindow.windowLevel = ._callView
             settingsWindow.isOpaque = true
             settingsWindow.backgroundColor = Theme.launchScreenBackgroundColor
             settingsWindow.rootViewController = viewController
