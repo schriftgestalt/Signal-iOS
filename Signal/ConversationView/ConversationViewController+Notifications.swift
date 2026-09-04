@@ -156,7 +156,7 @@ extension ConversationViewController {
     private func applicationWillEnterForeground(_ notification: NSNotification) {
         AssertIsOnMainThread()
 
-        startReadTimer()
+        markVisibleMessagesAsRead()
         updateCellsVisible()
     }
 
@@ -166,7 +166,6 @@ extension ConversationViewController {
 
         updateCellsVisible()
         mediaCache.removeAllObjects()
-        cancelReadTimer()
     }
 
     @objc
@@ -179,7 +178,6 @@ extension ConversationViewController {
         saveDraft()
         markVisibleMessagesAsRead()
         mediaCache.removeAllObjects()
-        cancelReadTimer()
         dismissPresentedViewControllerIfNecessary()
         saveLastVisibleSortIdAndOnScreenPercentage()
 
@@ -190,7 +188,7 @@ extension ConversationViewController {
     private func applicationDidBecomeActive(_ notification: NSNotification) {
         AssertIsOnMainThread()
 
-        startReadTimer()
+        markVisibleMessagesAsRead()
     }
 
     @objc

@@ -200,6 +200,8 @@ extension ConversationViewController: UIScrollViewDelegate {
         if !isUserScrolling, !isWaitingForDeceleration {
             saveLastVisibleSortIdAndOnScreenPercentage()
         }
+
+        markVisibleMessagesAsRead()
     }
 
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {

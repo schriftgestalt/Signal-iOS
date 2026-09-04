@@ -393,7 +393,6 @@ public final class ConversationViewController: OWSViewController {
         self.setNeedsStatusBarAppearanceUpdate()
 
         self.markVisibleMessagesAsRead()
-        self.startReadTimer()
         self.updateNavigationBarSubtitleLabel()
         self.autoLoadMoreIfNecessary()
 
@@ -489,9 +488,7 @@ public final class ConversationViewController: OWSViewController {
 
         AppEnvironment.shared.cvAudioPlayerRef.stopAll()
 
-        self.cancelReadTimer()
         self.saveDraft()
-        self.markVisibleMessagesAsRead()
         self.finishRecordingVoiceMessage(sendImmediately: false)
         self.mediaCache.removeAllObjects()
         inputToolbar?.clearDesiredKeyboard()
@@ -526,6 +523,7 @@ public final class ConversationViewController: OWSViewController {
         inputToolbar.ensureTextViewHeight()
 
         updateContentInsets()
+        markVisibleMessagesAsRead()
     }
 
     override public var shouldAutorotate: Bool {

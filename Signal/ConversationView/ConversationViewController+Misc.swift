@@ -362,47 +362,6 @@ public extension ConversationViewController {
 // MARK: - Timers
 
 extension ConversationViewController {
-    public func startReadTimer(caller: String = #function) {
-        AssertIsOnMainThread()
-
-        readTimer?.invalidate()
-        let readTimer = Timer(timeInterval: 0.1, repeats: true) { [weak self] timer in
-            guard let self else {
-                timer.invalidate()
-                return
-            }
-            // If the view isn't visible, return
-            guard self.view.window != nil else {
-                timer.invalidate()
-                return
-            }
-            self.readTimerDidFire()
-        }
-        self.readTimer = readTimer
-        RunLoop.main.add(readTimer, forMode: .common)
-    }
-
-    private func readTimerDidFire() {
-        AssertIsOnMainThread()
-
-        if layout.isPerformBatchUpdatesOrReloadDataBeingApplied {
-            return
-        }
-        markVisibleMessagesAsRead()
-    }
-
-    public func cancelReadTimer(caller: String = #function) {
-        AssertIsOnMainThread()
-
-        readTimer?.invalidate()
-        self.readTimer = nil
-    }
-
-    private var readTimer: Timer? {
-        get { viewState.readTimer }
-        set { viewState.readTimer = newValue }
-    }
-
     var reloadTimer: Timer? {
         get { viewState.reloadTimer }
         set { viewState.reloadTimer = newValue }
@@ -447,6 +406,8 @@ extension ConversationViewController {
         }
     }
 
+    // MARK: - Read State
+
     var lastSortIdMarkedRead: UInt64 {
         get { viewState.lastSortIdMarkedRead }
         set { viewState.lastSortIdMarkedRead = newValue }
@@ -466,6 +427,16 @@ extension ConversationViewController {
 
     public func markVisibleMessagesAsRead(caller: String = #function) {
         AssertIsOnMainThread()
+
+        guard
+            isViewVisible,
+            CurrentAppContext().isAppForegroundAndActive(),
+            let windowScene = viewIfLoaded?.window?.windowScene,
+            windowScene.activationState == .foregroundActive,
+            !layout.isPerformBatchUpdatesOrReloadDataBeingApplied
+        else {
+            return
+        }
 
         guard
             let navigationController,
@@ -503,12 +474,10 @@ extension ConversationViewController {
                 self.setLastSortIdMarkedRead(lastSortIdMarkedRead: lastVisibleSortId)
                 self.isMarkingAsRead = false
 
-                // If -markVisibleMessagesAsRead wasn't invoked on a
-                // timer, we'd want to double check that the current
-                // -lastVisibleSortId hasn't incremented since we
-                // started the read receipt request. But we have a
-                // timer, so if it has changed, this method will just
-                // be reinvoked in < 100ms.
+                // The visible range or render state may have changed while the
+                // asynchronous read operation was running. Check once more so
+                // an event that arrived in that window is not missed.
+                self.markVisibleMessagesAsRead()
             }
         }
     }

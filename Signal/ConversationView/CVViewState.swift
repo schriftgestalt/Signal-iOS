@@ -106,7 +106,6 @@ public class CVViewState: NSObject {
 
     public var actionOnOpen: ConversationViewAction = .none
 
-    public var readTimer: Timer?
     public var reloadTimer: Timer?
 
     public var lastSortIdMarkedRead: UInt64 = 0

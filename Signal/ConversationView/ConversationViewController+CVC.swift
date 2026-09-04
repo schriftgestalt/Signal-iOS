@@ -311,6 +311,12 @@ extension ConversationViewController: CVLoadCoordinatorDelegate {
             viewState.selectionAnimationState = .idle
             ensureBottomViewType()
         }
+
+        // Defer until the collection view has finished applying the new render
+        // state so the visible range reflects newly inserted messages.
+        DispatchQueue.main.async { [weak self] in
+            self?.markVisibleMessagesAsRead()
+        }
     }
 
     // The view's first appearance and the first load can race.
