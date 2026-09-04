@@ -18,6 +18,7 @@ final class CallKitCallUIAdaptee: NSObject, CallUIAdaptee, @preconcurrency CXPro
     private let callManager: CallKitCallManager
     var callService: CallService { AppEnvironment.shared.callService }
     private let showNamesOnCallScreen: Bool
+    private let useSystemCallLog: Bool
     private let provider: CXProvider
     private let audioActivity: AudioActivity
 
@@ -92,12 +93,22 @@ final class CallKitCallUIAdaptee: NSObject, CallUIAdaptee, @preconcurrency CXPro
 
         self.audioActivity = AudioActivity(audioDescription: "[CallKitCallUIAdaptee]", behavior: .call)
         self.showNamesOnCallScreen = showNamesOnCallScreen
+        self.useSystemCallLog = useSystemCallLog
 
         super.init()
 
         // We cannot assert singleton here, because this class gets rebuilt when the user changes relevant call settings
 
         self.provider.setDelegate(self, queue: nil)
+    }
+
+    /// Refreshing the configuration also refreshes the AVAudioSession identifier
+    /// that CallKit has cached for this process. Without this, CallKit can fail to
+    /// activate audio for a newly reported call after the audio session changes.
+    @MainActor
+    private func refreshProviderConfiguration() {
+        Logger.info("CallKit: refreshing provider configuration")
+        provider.configuration = Self.buildProviderConfiguration(useSystemCallLog: useSystemCallLog)
     }
 
     private func localizedCallerNameWithSneakyTransaction(for call: SignalCall) -> String {
@@ -146,6 +157,7 @@ final class CallKitCallUIAdaptee: NSObject, CallUIAdaptee, @preconcurrency CXPro
         // Add the new outgoing call to the app's list of calls.
         // So we can find it in the provider delegate callbacks.
         Self.providerReadyFlag.runNowOrWhenDidBecomeReadySync {
+            self.refreshProviderConfiguration()
             self.callManager.addCall(call)
             self.callManager.startOutgoingCall(call, completion: completion)
         }
@@ -221,6 +233,7 @@ final class CallKitCallUIAdaptee: NSObject, CallUIAdaptee, @preconcurrency CXPro
         }
 
         Self.providerReadyFlag.runNowOrWhenDidBecomeReadySync {
+            self.refreshProviderConfiguration()
             call.commonState.markPendingReportToSystem()
 
             // Report the incoming call to the system
