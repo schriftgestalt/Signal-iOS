@@ -494,8 +494,11 @@ open class OWSTableViewController2: OWSViewController, OWSNavigationChildControl
                 roundedHighlight.translatesAutoresizingMaskIntoConstraints = false
                 selectedBackground.addSubview(roundedHighlight)
                 NSLayoutConstraint.activate([
-                    roundedHighlight.leadingAnchor.constraint(equalTo: selectedBackground.leadingAnchor, constant: 8),
-                    roundedHighlight.trailingAnchor.constraint(equalTo: selectedBackground.trailingAnchor, constant: -8),
+                    // Catalyst applies an additional horizontal inset to a sidebar
+                    // cell's selected background. Extend through that inset so the
+                    // highlight has the same width as a native macOS sidebar row.
+                    roundedHighlight.leadingAnchor.constraint(equalTo: selectedBackground.leadingAnchor, constant: -8),
+                    roundedHighlight.trailingAnchor.constraint(equalTo: selectedBackground.trailingAnchor, constant: 8),
                     roundedHighlight.topAnchor.constraint(equalTo: selectedBackground.topAnchor, constant: 2),
                     roundedHighlight.bottomAnchor.constraint(equalTo: selectedBackground.bottomAnchor, constant: -2),
                 ])
