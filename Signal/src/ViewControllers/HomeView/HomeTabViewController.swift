@@ -22,7 +22,7 @@ extension HomeTabViewController {
         databaseStorage: SDSDatabaseStorage,
         badgeColor: UIColor? = nil,
         onDidDismissContextMenu: @escaping () -> Void = {},
-        buildActions: (_ settingsAction: UIMenuElement) -> [UIMenuElement],
+        buildActions: (_ settingsAction: UIMenuElement?) -> [UIMenuElement],
         showAppSettings: @escaping () -> Void,
     ) -> UIBarButtonItem {
         let isInFloatingSidebar = if #available(iOS 26, *) {
@@ -32,11 +32,15 @@ extension HomeTabViewController {
             false
         }
 
-        let settingsAction = UIAction(
+#if targetEnvironment(macCatalyst)
+        let settingsAction: UIMenuElement? = nil
+#else
+        let settingsAction: UIMenuElement? = UIAction(
             title: CommonStrings.openAppSettingsButton,
             image: Theme.iconImage(.contextMenuSettings),
             handler: { _ in showAppSettings() },
         )
+#endif
 
         let contextButton = ContextMenuButton(
             actions: buildActions(settingsAction),

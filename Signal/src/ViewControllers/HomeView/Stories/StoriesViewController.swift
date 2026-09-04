@@ -243,7 +243,7 @@ class StoriesViewController: OWSViewController, StoryListDataSourceDelegate, Hom
         navigationItem.leftBarButtonItem = createSettingsBarButtonItem(
             databaseStorage: SSKEnvironment.shared.databaseStorageRef,
             buildActions: { settingsAction -> [UIMenuElement] in
-                return [
+                var actions: [UIMenuElement] = [
                     UIAction(
                         title: OWSLocalizedString(
                             "STORY_PRIVACY_TITLE",
@@ -254,8 +254,11 @@ class StoriesViewController: OWSViewController, StoryListDataSourceDelegate, Hom
                             self?.showPrivacySettings()
                         },
                     ),
-                    settingsAction,
                 ]
+                if let settingsAction {
+                    actions.append(settingsAction)
+                }
+                return actions
             },
             showAppSettings: { [weak self] in
                 self?.showAppSettings()

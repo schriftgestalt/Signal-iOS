@@ -631,7 +631,9 @@ public class ChatListViewController: OWSViewController, HomeTabViewController {
                     )
                 }
 
-                contextMenuActions.append(settingsAction)
+                if let settingsAction {
+                    contextMenuActions.append(settingsAction)
+                }
 
                 if viewState.settingsButtonCreator.hasArchivedChats {
                     contextMenuActions.append(

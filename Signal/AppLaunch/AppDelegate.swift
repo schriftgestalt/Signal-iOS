@@ -42,6 +42,27 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         static let appLaunchesAttemptedKey = "AppLaunchesAttempted"
     }
 
+#if targetEnvironment(macCatalyst)
+    override func buildMenu(with builder: UIMenuBuilder) {
+        super.buildMenu(with: builder)
+
+        guard builder.system == .main else { return }
+
+        let settingsCommand = UIKeyCommand(
+            title: "\(CommonStrings.openAppSettingsButton)…",
+            action: #selector(ConversationSplitViewController.showAppSettings),
+            input: ",",
+            modifierFlags: .command,
+        )
+        let settingsMenu = UIMenu(
+            title: "",
+            options: .displayInline,
+            children: [settingsCommand],
+        )
+        builder.replace(menu: .preferences, with: settingsMenu)
+    }
+#endif
+
     // MARK: - Lifecycle
 
     func applicationWillEnterForeground(_ application: UIApplication) {
