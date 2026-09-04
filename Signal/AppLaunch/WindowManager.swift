@@ -45,12 +45,6 @@ class WindowManager {
     }
 
     func isAppWindow(_ window: UIWindow) -> Bool {
-#if targetEnvironment(macCatalyst)
-        if window === settingsWindow {
-            return true
-        }
-#endif
-
         return switch window {
         case rootWindow: true
         case returnToCallWindow: true
@@ -62,15 +56,7 @@ class WindowManager {
     }
 
     var captchaWindow: UIWindow {
-        if shouldShowCallView {
-            return callViewWindow
-        }
-#if targetEnvironment(macCatalyst)
-        if let settingsWindow, settingsWindow.isKeyWindow {
-            return settingsWindow
-        }
-#endif
-        return rootWindow
+        return shouldShowCallView ? callViewWindow : rootWindow
     }
 
     var isScreenBlockActive: Bool = false {
@@ -100,11 +86,6 @@ class WindowManager {
 
     // UIWindow.Level.normal
     var rootWindow: UIWindow!
-
-#if targetEnvironment(macCatalyst)
-    // A normal-level window that Catalyst hosts as a separate macOS window.
-    private var settingsWindow: UIWindow?
-#endif
 
     // UIWindow.Level._returnToCall
     private lazy var returnToCallWindow: UIWindow = {
@@ -188,12 +169,6 @@ class WindowManager {
 
     private func ensureWindowState() {
         AssertIsOnMainThread()
-
-#if targetEnvironment(macCatalyst)
-        if isScreenBlockActive || isClockSkewBlockActive || (shouldShowCallView && callViewController != nil) {
-            ensureSettingsWindowHidden()
-        }
-#endif
 
         // To avoid bad frames, we never want to hide the blocking window, so we manipulate
         // its window level to "hide" it behind other windows.  The other windows have fixed
@@ -351,59 +326,6 @@ class WindowManager {
         // or behind the root window.
         screenBlockingWindow.windowLevel = ._background
     }
-
-#if targetEnvironment(macCatalyst)
-    // MARK: Settings
-
-    func showSettingsWindow(
-        _ viewController: AppSettingsSplitViewController,
-        replaceExistingContent: Bool,
-        completion: (() -> Void)? = nil,
-    ) {
-        AssertIsOnMainThread()
-
-        guard
-            !isScreenBlockActive,
-            !isClockSkewBlockActive,
-            !(shouldShowCallView && callViewController != nil)
-        else { return }
-
-        let window: UIWindow
-        if let settingsWindow {
-            if replaceExistingContent {
-                viewController.prepareForStandaloneWindow()
-                settingsWindow.rootViewController = viewController
-            }
-            window = settingsWindow
-        } else {
-            viewController.prepareForStandaloneWindow()
-
-            let settingsWindow = OWSWindow(frame: CGRect(
-                origin: .zero,
-                size: viewController.preferredContentSize,
-            ))
-            // Catalyst hosts elevated UIWindows like the existing call window
-            // separately from the main app content. A normal-level UIWindow is
-            // instead composited into the main window.
-            settingsWindow.windowLevel = ._callView
-            settingsWindow.isOpaque = true
-            settingsWindow.backgroundColor = Theme.launchScreenBackgroundColor
-            settingsWindow.rootViewController = viewController
-            self.settingsWindow = settingsWindow
-            window = settingsWindow
-        }
-
-        window.makeKeyAndVisible()
-        DispatchQueue.main.async {
-            completion?()
-        }
-    }
-
-    private func ensureSettingsWindowHidden() {
-        guard let settingsWindow, !settingsWindow.isHidden else { return }
-        settingsWindow.isHidden = true
-    }
-#endif
 
     // MARK: Calls
 

@@ -24,7 +24,6 @@ class AppSettingsViewController: OWSTableViewController2 {
     private var localUserProfile: OWSUserProfile?
     private weak var detailNavigationController: OWSNavigationController?
     private var selectsProfileInitially = false
-    private var isHostedInStandaloneWindow = false
 
     override func viewDidLoad() {
 #if targetEnvironment(macCatalyst)
@@ -52,7 +51,9 @@ class AppSettingsViewController: OWSTableViewController2 {
 
         title = OWSLocalizedString("SETTINGS_NAV_BAR_TITLE", comment: "Title for settings activity")
 #if targetEnvironment(macCatalyst)
-        updateCloseButton()
+        navigationItem.leftBarButtonItem = .closeButton { [weak self] in
+            self?.dismiss(animated: true)
+        }
 #else
         navigationItem.rightBarButtonItem = .doneButton(dismissingFrom: self)
 #endif
@@ -116,25 +117,6 @@ class AppSettingsViewController: OWSTableViewController2 {
         self.detailNavigationController = detailNavigationController
         self.selectsProfileInitially = selectsProfileInitially
     }
-
-#if targetEnvironment(macCatalyst)
-    fileprivate func prepareForStandaloneWindow() {
-        isHostedInStandaloneWindow = true
-        if isViewLoaded {
-            updateCloseButton()
-        }
-    }
-
-    private func updateCloseButton() {
-        if isHostedInStandaloneWindow {
-            navigationItem.leftBarButtonItem = nil
-        } else {
-            navigationItem.leftBarButtonItem = .closeButton { [weak self] in
-                self?.dismiss(animated: true)
-            }
-        }
-    }
-#endif
 
     fileprivate func makeProfileSettingsViewController() -> ProfileSettingsViewController {
         ProfileSettingsViewController(
@@ -707,14 +689,12 @@ extension AppSettingsViewController: UsernameLinkScanDelegate {
 final class AppSettingsSplitViewController: UISplitViewController {
 
     let detailNavigationController: OWSNavigationController
-    private let appSettingsViewController: AppSettingsViewController
 
     init(
         appSettingsViewController: AppSettingsViewController,
         detailNavigationController: OWSNavigationController = OWSNavigationController(),
         detailViewControllers: [UIViewController] = [],
     ) {
-        self.appSettingsViewController = appSettingsViewController
         self.detailNavigationController = detailNavigationController
 
         super.init(style: .doubleColumn)
@@ -748,19 +728,6 @@ final class AppSettingsSplitViewController: UISplitViewController {
 
         modalPresentationStyle = .formSheet
         preferredContentSize = CGSize(width: 920, height: 680)
-        title = CommonStrings.openAppSettingsButton
-    }
-
-    func prepareForStandaloneWindow() {
-        appSettingsViewController.prepareForStandaloneWindow()
-    }
-
-    @objc
-    func showAppSettings() {
-        AppEnvironment.shared.windowManagerRef.showSettingsWindow(
-            self,
-            replaceExistingContent: false,
-        )
     }
 
     @available(*, unavailable)
